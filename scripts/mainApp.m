@@ -5,7 +5,7 @@
     
     % Set parameters
     screens = Screen('Screens');
-    screenNumber = max(screens);
+    screenNumber = min(screens) + 1;
     
     % Configure Screen preferences as in FFP2Direct
     Screen('Preference', 'SkipSyncTests', 1);
@@ -40,39 +40,63 @@
     Screen('TextStyle', window, 1+2);  % Bold + Italic
 
     % Hide cursor and suppress keypresses to Matlab window
-    HideCursor;
+    ShowCursor;
 
 
 %% Initialize experiment parameters
 
 lang = 'de';
 
-n_baselineTrials = 18;
-n_conflictTrials = 54;
+currentBaselineTrials = 1;
+targetBaselineTrials = 18; 
 
-angryFaces = dir(fullfile('../sprites/faces/angry', '*.jpg'));
-neutralFaces = dir(fullfile('../sprites/faces/neutral', '*.jpg'));
+currentConflictTrials = 1;
+targetConflictTrials = 54;
+
+angryFacesPath = dir(fullfile('./sprites/faces/angry', '*.jpg'));
+neutralFacesPath = dir(fullfile('./sprites/faces/neutral', '*.jpg'));
+
 decisionWindow = double(4.000000);
+decisionHistory = [];
 
-aversiveProbability = int32(0);
 score = int32(0);
 
 % Run the application
 
 try
-    % Create module instances
+    % Create module instances and preload faces
+    fc = faceController();
+    fc = fc.loadFaces(window, angryFacesPath, neutralFacesPath);
+    tc = trialController();
     ic = instructionController();
 
-    % Display initial instruction
+    % Debug
+    fprintf('Found %d angry face images\n', length(angryFacesPath));
+    fprintf('Found %d neutral face images\n', length(neutralFacesPath));
+
+    if ~isempty(angryFacesPath)
+        fprintf('First angry face path: %s\n', fullfile(angryFacesPath(1).folder, angryFacesPath(1).name));
+    end
+    
+    if ~isempty(neutralFacesPath)
+        fprintf('First neutral face path: %s\n', fullfile(neutralFacesPath(1).folder, neutralFacesPath(1).name));
+    end
+
+    % Display baseline instruction indexed as 0
     ic.displayInstruction(window, white, lang, 0)
     
     % Wait for a key press before continuing
     KbStrokeWait;
 
-    % Clean up
-    Screen('CloseAll');
-    ShowCursor;
-    
+    % Run baseline trials
+    while currentBaselineTrials <= targetBaselineTrials
+        decisionHistory = tc.runBaselineTrial(window, windowRect, grey, white, fc, currentBaselineTrials, decisionHistory);
+        currentBaselineTrials = currentBaselineTrials + 1;
+    end
+
+    disp('Subject decisions:');
+    disp(struct2table(decisionHistory));
+
 catch error
     % Clean up in case of error
     Screen('CloseAll');

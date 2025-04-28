@@ -1,8 +1,8 @@
 classdef instructionController
     properties
     end
-    methods
-        function displayInstruction(obj, window, white, lang, instrIndex)
+    methods (Static)
+        function displayInstruction(window, white, lang, instrIndex)
             if instrIndex == 0
                 switch lang
                     case 'de'
@@ -25,6 +25,14 @@ classdef instructionController
                         'If no unpleasant image appears, you will see a blank screen.' ...
                         '\n\n' ...
                         'When you are ready, please press the spacebar to begin the task.'];
+                end
+                if instrIndex == 1
+                    switch lang
+                        case 'de'
+                            instrStr = ['trialInstrDE'];
+                        case 'en'
+                            instrStr = ['trialInstrEN'];
+                    end
                 end
                 DrawFormattedText(window, instrStr, 'center', 'center', white);
                 Screen('Flip', window);
