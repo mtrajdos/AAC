@@ -64,7 +64,7 @@ classdef faceController
             end
         end
 
-        function [width, height] = getImageSize(obj, texture)
+        function [width, height] = getImageSize(~, texture)
             rect = Screen('Rect', texture);
             width = rect(3) - rect(1);
             height = rect(4) - rect(2);

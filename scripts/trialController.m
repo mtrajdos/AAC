@@ -178,7 +178,7 @@ classdef trialController
 
             % Display angry face based on probability,
             % otherwise empty screen
-            if rand() < obj.aversiveProbability 
+            if rand() <= obj.aversiveProbability 
                 Screen('DrawTexture', window, angryFaceTexture, [], [], 0);
                 Screen('Flip', window);
                 WaitSecs(obj.faceDur)
