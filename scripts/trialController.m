@@ -3,30 +3,50 @@ classdef trialController
         % Initialize parameters
         aversiveProbability = int32(0);
         sc = sliderController();
+        fixationDur = 0.3;
+        faceDur = 0.7;
     end
     
     methods
-        function decisionHistory = runBaselineTrial(obj, window, windowRect, grey, white, fc, currentBaselineTrials, decisionHistory)
+        function decisionHistory = runBaselineTrial(obj, window, windowRect, red, grey, white, fc, currentBaselineTrials, decisionHistory)
             % Get window dimensions
             [width, height] = Screen('WindowSize', window);
             
             % Load the slider
             slider = sliderController.loadSlider(window, windowRect);
+
+            % Move slider to bottom of screen
+            sliderYOffset = height * 0.7;
+            slider.axesRect(2) = sliderYOffset;
+            slider.axesRect(4) = sliderYOffset + slider.lineWidth;
             
             % Get random faces
             neutralFaceTexture = fc.getRandomNeutralFace();
             angryFaceTexture = fc.getRandomAngryFace();
             
-            % Calculate face positions
-            faceWidth = 150;
-            faceHeight = 180;
-            neutralFaceRect = [50, height/5-faceHeight/2, 50+faceWidth, height/5+faceHeight/2];
-            angryFaceRect = [width-50-faceWidth, height/5-faceHeight/2, width-50, height/5+faceHeight/2];
+            % Get original image sizes from the textures
+            neutralRect = Screen('Rect', neutralFaceTexture);
+            angryRect = Screen('Rect', angryFaceTexture);
             
-            % Move slider to bottom of screen
-            sliderYOffset = height * 0.7;
-            slider.axesRect(2) = sliderYOffset;
-            slider.axesRect(4) = sliderYOffset + slider.lineWidth;
+            neutralWidth = neutralRect(3) - neutralRect(1);
+            neutralHeight = neutralRect(4) - neutralRect(2);
+            
+            angryWidth = angryRect(3) - angryRect(1);
+            angryHeight = angryRect(4) - angryRect(2);
+            
+            % Define vertical position just above the slider
+            imageBottomY = sliderYOffset - 600;
+                      
+            % Get X centers of the leftmost and rightmost slider ticks
+            leftTickX = slider.ticRects(1, 1) + slider.lineWidth / 2;
+            rightTickX = slider.ticRects(1, end) + slider.lineWidth / 2;
+            
+            % Create centered destination rectangles
+            neutralFaceRect = CenterRectOnPoint([0 0 neutralWidth neutralHeight], ...
+                                                leftTickX, imageBottomY + neutralHeight / 2);
+            
+            angryFaceRect = CenterRectOnPoint([0 0 angryWidth angryHeight], ...
+                                               rightTickX, imageBottomY + angryHeight / 2);
             
             for i = 1:slider.nSteps
                 slider.ticRects(2, i) = sliderYOffset;
@@ -40,44 +60,66 @@ classdef trialController
             
             % Add key for early exit
             escapeKey = KbName('Escape');
+            enterKey = KbName('Return');
             
-            % Draw background
-            Screen('FillRect', window, grey);
-
-            % Display faces
-            Screen('DrawTexture', window, neutralFaceTexture, [], neutralFaceRect);
-            Screen('DrawTexture', window, angryFaceTexture, [], angryFaceRect);
-            
-            % Draw the slider
-            Screen('FillRect', window, slider.scaleColor, [slider.axesRect, slider.ticRects]);
-            
-            % Make ticks visible
-            for i = 1:slider.nSteps
-                Screen('FillRect', window, [0.7, 0.7, 0.7], slider.ticRects(:,i));
+            % Nested function to display fixation point
+            function drawFixation()
+                % Draw background
+                Screen('FillRect', window, grey);
+                
+                % Display fixation
+                [xCenter, yCenter] = RectCenter(windowRect);
+                Screen('FillOval', window, red, [xCenter-5 yCenter-5 xCenter+5 yCenter+5]);
+                Screen('Flip', window);
+                WaitSecs(obj.fixationDur);
             end
             
-            % Highlight current position
-            Screen('FillRect', window, slider.activeColor, slider.activeTicRects(:, slider.currentPosition));
-            
-            % Draw labels
-            Screen('TextSize', window, slider.textSize);
-            for i = 1:slider.nSteps
-                textRect = Screen('TextBounds', window, slider.labels{i});
-                Screen('DrawText', window, slider.labels{i}, ...
-                    round(slider.ticRects(1,i)-textRect(3)/2), ...
-                    slider.ticRects(4,i) + slider.ticTextGap, white);
+            % Nested function to draw trial screen
+            function drawScreen()
+                % Draw background
+                Screen('FillRect', window, grey);
+                
+                % Display faces
+                Screen('DrawTexture', window, neutralFaceTexture, [], neutralFaceRect, 0);
+                Screen('DrawTexture', window, angryFaceTexture, [], angryFaceRect, 0);
+                
+                % Draw the slider
+                Screen('FillRect', window, slider.scaleColor, [slider.axesRect, slider.ticRects]);
+                
+                % Make ticks visible
+                for j = 1:slider.nSteps
+                    Screen('FillRect', window, [0.7, 0.7, 0.7], slider.ticRects(:,j));
+                end
+                
+                % Highlight current position
+                Screen('FillRect', window, slider.activeColor, slider.activeTicRects(:, slider.currentPosition));
+                
+                % Draw labels
+                Screen('TextSize', window, slider.textSize);
+                for j = 1:slider.nSteps
+                    textRect = Screen('TextBounds', window, slider.labels{j});
+                    Screen('DrawText', window, slider.labels{j}, ...
+                        round(slider.ticRects(1,j)-textRect(3)/2), ...
+                        slider.ticRects(4,j) + slider.ticTextGap, white);
+                end
+                
+                % Draw instruction text
+                Screen('TextSize', window, 24);
+                DrawFormattedText(window, 'Move the marker using left/right arrows. Press ENTER to confirm. Press ESC to exit.', ...
+                    'center', sliderYOffset + 120, white);
+                
+                Screen('Flip', window);
             end
             
-            % Draw instruction text
-            Screen('TextSize', window, 24);
-            DrawFormattedText(window, 'Move the marker using left/right arrows. Press ENTER to confirm. Press ESC to exit.', ...
-                'center', sliderYOffset + 120, white);
+            % Display fixation point first
+            drawFixation();
             
-            Screen('Flip', window);
+            % Then show the main trial screen
+            drawScreen();
             
             % Process key presses
-            enterKey = KbName('Return');
-            while true
+            isDecisionMade = false;
+            while ~isDecisionMade
                 % Ignore mouse input
                 [~, ~, ~] = GetMouse(window);
                 
@@ -87,70 +129,14 @@ classdef trialController
                     if keyCode(slider.lessKey)
                         % Move left
                         slider.currentPosition = max(1, slider.currentPosition - 1);
-                        
-                        % Redraw everything
-                        Screen('FillRect', window, grey);
-                        Screen('DrawTexture', window, neutralFaceTexture, [], neutralFaceRect);
-                        Screen('DrawTexture', window, angryFaceTexture, [], angryFaceRect);
-                        Screen('FillRect', window, slider.scaleColor, [slider.axesRect, slider.ticRects]);
-                        
-                        % Draw ticks
-                        for i = 1:slider.nSteps
-                            Screen('FillRect', window, [0.7, 0.7, 0.7], slider.ticRects(:,i));
-                        end
-                        
-                        Screen('FillRect', window, slider.activeColor, slider.activeTicRects(:, slider.currentPosition));
-                        
-                        % Draw labels
-                        Screen('TextSize', window, slider.textSize);
-                        for i = 1:slider.nSteps
-                            textRect = Screen('TextBounds', window, slider.labels{i});
-                            Screen('DrawText', window, slider.labels{i}, ...
-                                round(slider.ticRects(1,i)-textRect(3)/2), ...
-                                slider.ticRects(4,i) + slider.ticTextGap, white);
-                        end
-                        
-                        % Draw instruction text
-                        Screen('TextSize', window, 24);
-                        DrawFormattedText(window, 'Move the marker using left/right arrows. Press ENTER to confirm. Press ESC to exit.', ...
-                            'center', sliderYOffset + 120, white);
-                        
-                        Screen('Flip', window);
-                        WaitSecs(0.15);
+                        drawScreen();
+                        WaitSecs(0.15); % Prevent rapid movement
                         
                     elseif keyCode(slider.moreKey)
                         % Move right
                         slider.currentPosition = min(slider.nSteps, slider.currentPosition + 1);
-                        
-                        % Redraw everything
-                        Screen('FillRect', window, grey);
-                        Screen('DrawTexture', window, neutralFaceTexture, [], neutralFaceRect);
-                        Screen('DrawTexture', window, angryFaceTexture, [], angryFaceRect);
-                        Screen('FillRect', window, slider.scaleColor, [slider.axesRect, slider.ticRects]);
-                        
-                        % Draw ticks
-                        for i = 1:slider.nSteps
-                            Screen('FillRect', window, [0.7, 0.7, 0.7], slider.ticRects(:,i));
-                        end
-                        
-                        Screen('FillRect', window, slider.activeColor, slider.activeTicRects(:, slider.currentPosition));
-                        
-                        % Draw labels
-                        Screen('TextSize', window, slider.textSize);
-                        for i = 1:slider.nSteps
-                            textRect = Screen('TextBounds', window, slider.labels{i});
-                            Screen('DrawText', window, slider.labels{i}, ...
-                                round(slider.ticRects(1,i)-textRect(3)/2), ...
-                                slider.ticRects(4,i) + slider.ticTextGap, white);
-                        end
-                        
-                        % Draw instruction text
-                        Screen('TextSize', window, 24);
-                        DrawFormattedText(window, 'Move the marker using left/right arrows. Press ENTER to confirm. Press ESC to exit.', ...
-                            'center', sliderYOffset + 120, white);
-                        
-                        Screen('Flip', window);
-                        WaitSecs(0.15);
+                        drawScreen();
+                        WaitSecs(0.15); % Prevent rapid movement
                         
                     elseif keyCode(enterKey)
                         % Save final position and exit
@@ -173,12 +159,13 @@ classdef trialController
                             decisionHistory(end+1) = newDecision; %#ok<AGROW>
                         end
                         
-                        break;
+                        isDecisionMade = true;
                         
                     elseif keyCode(escapeKey)
                         % Early exit
                         fprintf('Trial interrupted by user pressing Escape key\n');
                         Screen('CloseAll');
+                        return
                     end
                     
                     % Wait for key release
@@ -186,14 +173,20 @@ classdef trialController
                 end
             end
             
-            % Flash the selection briefly to give feedback
-            Screen('FillRect', window, grey);
-            Screen('DrawTexture', window, neutralFaceTexture, [], neutralFaceRect);
-            Screen('DrawTexture', window, angryFaceTexture, [], angryFaceRect);
-            Screen('FillRect', window, slider.scaleColor, [slider.axesRect, slider.ticRects]);
-            Screen('FillRect', window, [0.8, 0.8, 0.8], slider.activeTicRects(:, slider.finalPosition));
-            Screen('Flip', window);
-            WaitSecs(0.5);
+            % Display fixation point after decision
+            drawFixation();
+
+            % Display angry face based on probability,
+            % otherwise empty screen
+            if rand() < obj.aversiveProbability 
+                Screen('DrawTexture', window, angryFaceTexture, [], [], 0);
+                Screen('Flip', window);
+                WaitSecs(obj.faceDur)
+            else
+                Screen('FillRect', window, grey);
+                Screen('Flip', window);
+                WaitSecs(obj.faceDur)
+            end
         end
     end
 end

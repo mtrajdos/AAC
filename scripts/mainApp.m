@@ -14,7 +14,8 @@
     % Define colors
     white = WhiteIndex(screenNumber);
     black = BlackIndex(screenNumber);
-    grey = white / 2;
+    red = [255 0 0];
+    grey = [110 110 110]; % Match the background of face images
     midgray = round((white+black)/2);
     inc = white-midgray;
     
@@ -27,17 +28,13 @@
     
     % Get screen dimensions
     [xCenter, yCenter] = RectCenter(windowRect);
-    [screenXpixels, screenYpixels] = Screen('WindowSize', window);
     
     % Set text properties
-    if screenXpixels == 1024 && screenYpixels == 768
-        textSize = 18;
-    else
-        textSize = 24;
-    end
-    Screen('TextFont', window, 'Courier New');
+    textSize = 24;
+
+    Screen('TextFont', window, 'Arial');
     Screen('TextSize', window, textSize);
-    Screen('TextStyle', window, 1+2);  % Bold + Italic
+    Screen('TextStyle', window, 1);  % Bold + Italic
 
     % Hide cursor and suppress keypresses to Matlab window
     ShowCursor;
@@ -90,9 +87,29 @@ try
 
     % Run baseline trials
     while currentBaselineTrials <= targetBaselineTrials
-        decisionHistory = tc.runBaselineTrial(window, windowRect, grey, white, fc, currentBaselineTrials, decisionHistory);
+
+        % Run the trial
+        decisionHistory = tc.runBaselineTrial(window, windowRect, red, grey, white, fc, currentBaselineTrials, decisionHistory);
+        
+        % Check if this was the last trial
+        if currentBaselineTrials == targetBaselineTrials
+            % Immediately overwrite the fixation with completion screen
+            Screen('FillRect', window, grey);
+            DrawFormattedText(window, 'Baseline phase complete!', 'center', 'center', white);
+            Screen('Flip', window);
+            WaitSecs(2);
+            break;
+        end
+        
+        % Increment the counter for the next trial
         currentBaselineTrials = currentBaselineTrials + 1;
     end
+
+    Screen('FillRect', window, grey);
+    DrawFormattedText(window, 'Baseline phase complete!', 'center', 'center', white);
+    Screen('Flip', window);
+    WaitSecs(2);
+    Screen('CloseAll');
 
     disp('Subject decisions:');
     disp(struct2table(decisionHistory));

@@ -20,12 +20,6 @@ classdef faceController
                 fileName = fullfile(angryFacesPath(i).folder, angryFacesPath(i).name);
                 % Read the image
                 img = imread(fileName);
-                % Convert to appropriate format if needed
-                if size(img, 3) == 1 && ~islogical(img)
-                    if ismatrix(img)
-                        img = repmat(img, [1 1 3]);
-                    end
-                end
                 % Make texture and store the pointer
                 obj.angryFaces(i) = Screen('MakeTexture', window, img);
                 fprintf('Loaded angry face %d/%d: %s\n', i, numAngryFaces, angryFacesPath(i).name);
