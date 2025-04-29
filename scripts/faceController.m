@@ -45,22 +45,30 @@ classdef faceController
                 numAngryFaces, numNeutralFaces);
         end
         
-        function texture = getRandomAngryFace(obj)
-            if ~isempty(obj.angryFaces)
-                idx = randi(length(obj.angryFaces));
-                texture = obj.angryFaces(idx);
-            else
-                error('No angry faces have been loaded.');
+        function texture = getRandomFace(obj, faceType)
+            switch faceType
+                case 'angry'
+                    if ~isempty(obj.angryFaces)
+                        idx = randi(length(obj.angryFaces));
+                        texture = obj.angryFaces(idx);
+                    else
+                        error('No angry faces have been loaded.');
+                    end
+                case 'neutral'
+                    if ~isempty(obj.neutralFaces)
+                        idx = randi(length(obj.neutralFaces));
+                        texture = obj.neutralFaces(idx);
+                    else
+                        error('No neutral faces have been loaded.');
+                    end
             end
         end
-        
-        function texture = getRandomNeutralFace(obj)
-            if ~isempty(obj.neutralFaces)
-                idx = randi(length(obj.neutralFaces));
-                texture = obj.neutralFaces(idx);
-            else
-                error('No neutral faces have been loaded.');
-            end
+
+        function [width, height] = getImageSize(obj, texture)
+            rect = Screen('Rect', texture);
+            width = rect(3) - rect(1);
+            height = rect(4) - rect(2);
         end
+
     end
 end

@@ -89,11 +89,12 @@ try
     while currentBaselineTrials <= targetBaselineTrials
 
         % Run the trial
-        decisionHistory = tc.runBaselineTrial(window, windowRect, red, grey, white, fc, currentBaselineTrials, decisionHistory);
+        decisionHistory = tc.runBaselineTrial(window, windowRect, red, grey, white, fc, currentBaselineTrials, decisionHistory, lang);
         
         % Check if this was the last trial
         if currentBaselineTrials == targetBaselineTrials
-            % Immediately overwrite the fixation with completion screen
+            % Overwrite the fixation with completion screen
+            WaitSecs(0.5)
             Screen('FillRect', window, grey);
             DrawFormattedText(window, 'Baseline phase complete!', 'center', 'center', white);
             Screen('Flip', window);
@@ -105,10 +106,6 @@ try
         currentBaselineTrials = currentBaselineTrials + 1;
     end
 
-    Screen('FillRect', window, grey);
-    DrawFormattedText(window, 'Baseline phase complete!', 'center', 'center', white);
-    Screen('Flip', window);
-    WaitSecs(2);
     Screen('CloseAll');
 
     disp('Subject decisions:');

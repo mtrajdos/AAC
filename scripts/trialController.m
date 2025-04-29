@@ -5,10 +5,11 @@ classdef trialController
         sc = sliderController();
         fixationDur = 0.3;
         faceDur = 0.7;
+        sliderStr = '';
     end
     
     methods
-        function decisionHistory = runBaselineTrial(obj, window, windowRect, red, grey, white, fc, currentBaselineTrials, decisionHistory)
+        function decisionHistory = runBaselineTrial(obj, window, windowRect, red, grey, white, fc, currentBaselineTrials, decisionHistory, lang)
             % Get window dimensions
             [width, height] = Screen('WindowSize', window);
             
@@ -21,18 +22,12 @@ classdef trialController
             slider.axesRect(4) = sliderYOffset + slider.lineWidth;
             
             % Get random faces
-            neutralFaceTexture = fc.getRandomNeutralFace();
-            angryFaceTexture = fc.getRandomAngryFace();
-            
-            % Get original image sizes from the textures
-            neutralRect = Screen('Rect', neutralFaceTexture);
-            angryRect = Screen('Rect', angryFaceTexture);
-            
-            neutralWidth = neutralRect(3) - neutralRect(1);
-            neutralHeight = neutralRect(4) - neutralRect(2);
-            
-            angryWidth = angryRect(3) - angryRect(1);
-            angryHeight = angryRect(4) - angryRect(2);
+            neutralFaceTexture = fc.getRandomFace('neutral');
+            angryFaceTexture = fc.getRandomFace('angry');
+  
+            % Get original image sizes
+            [neutralWidth, neutralHeight] = fc.getImageSize(neutralFaceTexture);
+            [angryWidth, angryHeight] = fc.getImageSize(angryFaceTexture);
             
             % Define vertical position just above the slider
             imageBottomY = sliderYOffset - 600;
@@ -58,7 +53,7 @@ classdef trialController
             % Store initial slider position
             initialPosition = slider.currentPosition;
             
-            % Add key for early exit
+            % Add keys for exit and probability choices
             escapeKey = KbName('Escape');
             enterKey = KbName('Return');
             
@@ -102,12 +97,17 @@ classdef trialController
                         round(slider.ticRects(1,j)-textRect(3)/2), ...
                         slider.ticRects(4,j) + slider.ticTextGap, white);
                 end
-                
+
+                switch lang
+                    case 'de'
+                        obj.sliderStr = ['Bitte den Marker mit den Pfeiltasten links/rechts bewegen. Drücken Sie ENTER zum Bestätigen. Drücken Sie ESC zum Beenden.'];
+                    case 'en'
+                        obj.sliderStr = ['Move the marker using left/right arrows. Press ENTER to confirm. Press ESC to exit'];
+                end
+
                 % Draw instruction text
                 Screen('TextSize', window, 24);
-                DrawFormattedText(window, 'Move the marker using left/right arrows. Press ENTER to confirm. Press ESC to exit.', ...
-                    'center', sliderYOffset + 120, white);
-                
+                DrawFormattedText(window, obj.sliderStr, 'center', sliderYOffset + 120, white);
                 Screen('Flip', window);
             end
             

@@ -1,8 +1,4 @@
-classdef sliderController
-    properties
-    % Initialize parameters
-    end
-    
+classdef sliderController    
     methods (Static)
         function slider = loadSlider(window, windowRect)
             % Create a basic slider structure based on aw_likertScaleNew20241113
@@ -36,24 +32,14 @@ classdef sliderController
             KbName('UnifyKeyNames');
             slider.lessKey = KbName('LeftArrow');
             slider.moreKey = KbName('RightArrow');
-            slider.confirmKey = KbName('space');
-            slider.escapeKey = KbName('ESCAPE');
             
-            % Calculate slider screen elements exactly like in the original script
+            % Calculate slider screen elements
             activeAddon = 3;
             [xCenter, yCenter] = RectCenter(windowRect);
             slider.axesRect = [xCenter - slider.scaleWidth/2; yCenter - slider.lineWidth; xCenter + slider.scaleWidth/2; yCenter];
             slider.ticPositions = linspace(xCenter - slider.scaleWidth/2, xCenter + slider.scaleWidth/2-slider.lineWidth, slider.nSteps);
             slider.ticRects = [slider.ticPositions; ones(1, slider.nSteps)*yCenter; slider.ticPositions + slider.lineWidth; ones(1, slider.nSteps)*yCenter+slider.tickHeight];
             slider.activeTicRects = [slider.ticPositions-activeAddon; ones(1, slider.nSteps)*yCenter-activeAddon; slider.ticPositions + slider.lineWidth+activeAddon; ones(1, slider.nSteps)*yCenter+slider.tickHeight+activeAddon];
-            
-            % Include center coordinates for drawing text
-            slider.xCenter = xCenter;
-            slider.yCenter = yCenter;
-            
-            % Add info text field
-            slider.infoTextSize = 30; 
-            slider.infoTextYoffset = 100;
         end
     end
 end
