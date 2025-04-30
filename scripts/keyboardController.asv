@@ -1,0 +1,17 @@
+classdef keyboardController
+    properties
+        enter
+        left
+        ri
+        righ
+    end
+    methods
+        function obj = keyboardController()
+            KbName('UnifyKeyNames');
+            obj.enter = KbName('Enter');
+            obj.left = KbName('LeftArrow');
+            obj.right = KbName('RightArrow');
+            obj.escape = KbName('Escape');
+        end
+    end
+end

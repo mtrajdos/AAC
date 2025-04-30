@@ -9,7 +9,7 @@ classdef trialController
     end
     
     methods
-        function decisionHistory = runBaselineTrial(obj, window, windowRect, red, grey, white, fc, currentBaselineTrials, decisionHistory, lang)
+        function decisionHistory = runBaselineTrial(obj, window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang)
             % Get window dimensions
             [width, height] = Screen('WindowSize', window);
             
@@ -52,10 +52,6 @@ classdef trialController
             
             % Store initial slider position
             initialPosition = slider.currentPosition;
-            
-            % Add keys for exit and probability choices
-            escapeKey = KbName('Escape');
-            enterKey = KbName('Return');
             
             % Nested function to display fixation point
             function drawFixation()
@@ -126,19 +122,19 @@ classdef trialController
                 [keyIsDown, ~, keyCode] = KbCheck;
                 
                 if keyIsDown
-                    if keyCode(slider.lessKey)
+                    if keyCode(kc.left)
                         % Move left
                         slider.currentPosition = max(1, slider.currentPosition - 1);
                         drawScreen();
                         WaitSecs(0.15); % Prevent rapid movement
                         
-                    elseif keyCode(slider.moreKey)
+                    elseif keyCode(kc.right)
                         % Move right
                         slider.currentPosition = min(slider.nSteps, slider.currentPosition + 1);
                         drawScreen();
                         WaitSecs(0.15); % Prevent rapid movement
                         
-                    elseif keyCode(enterKey)
+                    elseif keyCode(kc.enter)
                         % Save final position and exit
                         slider.finalPosition = slider.currentPosition;
                         
@@ -161,7 +157,7 @@ classdef trialController
                         
                         isDecisionMade = true;
                         
-                    elseif keyCode(escapeKey)
+                    elseif keyCode(kc.escape)
                         % Early exit
                         fprintf('Trial interrupted by user pressing Escape key\n');
                         Screen('CloseAll');

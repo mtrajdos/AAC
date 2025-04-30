@@ -28,11 +28,6 @@ classdef sliderController
             slider.activeColor = [0, 255, 0];
             slider.ticTextGap = 3;
             
-            % Use KbName for key mappings - PTB compatible
-            KbName('UnifyKeyNames');
-            slider.lessKey = KbName('LeftArrow');
-            slider.moreKey = KbName('RightArrow');
-            
             % Calculate slider screen elements
             activeAddon = 3;
             [xCenter, yCenter] = RectCenter(windowRect);

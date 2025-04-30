@@ -58,6 +58,13 @@ decisionHistory = [];
 
 score = int32(0);
 
+KbName('UnifyKeyNames');
+keys = {enter: KbName('Return'), left: KbName('LeftArrow'), right: KbName('RightArrow')};
+
+            % Use KbName for key mappings - PTB compatible
+            slider.lessKey = ;
+            slider.moreKey = KbName('RightArrow');
+
 % Run the application
 
 try
@@ -66,7 +73,6 @@ try
     fc = fc.loadFaces(window, angryFacesPath, neutralFacesPath);
     tc = trialController();
     ic = instructionController();
-    kc = keyboardController();
 
     % Debug
     fprintf('Found %d angry face images\n', length(angryFacesPath));
@@ -84,16 +90,13 @@ try
     ic.displayInstruction(window, white, lang, 0)
     
     % Wait for an Enter press before continuing
-    % Only allow Enter key to be detected
-    RestrictKeysForKbCheck(kc.space);
-    KbStrokeWait;
-    RestrictKeysForKbCheck([]);  % Restore all keys
+    KbStrokeWait(KbCheck('Enter'));
 
     % Run baseline trials
     while currentBaselineTrials <= targetBaselineTrials
 
         % Run the trial
-        decisionHistory = tc.runBaselineTrial(window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang);
+        decisionHistory = tc.runBaselineTrial(window, windowRect, red, grey, white, fc, currentBaselineTrials, decisionHistory, lang, keys);
         
         % Check if this was the last trial
         if currentBaselineTrials == targetBaselineTrials
