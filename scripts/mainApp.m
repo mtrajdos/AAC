@@ -110,10 +110,10 @@ try
         currentBaselineTrials = currentBaselineTrials + 1;
     end
 
-    Screen('CloseAll');
-
     disp('Subject decisions in baseline phase:');
     disp(struct2table(decisionHistory));
+
+    ic.displayInstruction(window, white, lang, 1)
 
 catch error
     % Clean up in case of error
