@@ -65,7 +65,6 @@ classdef trialController
                 WaitSecs(obj.fixationDur);
             end
             
-            % Nested function to draw trial screen
             function drawScreen()
                 % Draw background
                 Screen('FillRect', window, grey);
@@ -82,6 +81,21 @@ classdef trialController
                     Screen('FillRect', window, [0.7, 0.7, 0.7], slider.ticRects(:,j));
                 end
                 
+                % Draw the manekin image if available
+                if isfield(slider, 'hasImage') && slider.hasImage
+                    % Enable alpha blending for transparency
+                    Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    
+                    % Center the image above the current tick position
+                    currentTickX = slider.ticRects(1, slider.currentPosition) + slider.lineWidth / 2;
+                    
+                    % Position 5px above the tick
+                    imageRect = CenterRectOnPoint(slider.imageRect, currentTickX, slider.ticRects(2, slider.currentPosition) - 5 - slider.imageHeight/2);
+                    
+                    % Draw the image with transparency
+                    Screen('DrawTexture', window, slider.imageTexture, [], imageRect, 0);
+                end
+                
                 % Highlight current position
                 Screen('FillRect', window, slider.activeColor, slider.activeTicRects(:, slider.currentPosition));
                 
@@ -93,14 +107,14 @@ classdef trialController
                         round(slider.ticRects(1,j)-textRect(3)/2), ...
                         slider.ticRects(4,j) + slider.ticTextGap, white);
                 end
-
+            
                 switch lang
                     case 'de'
                         obj.sliderStr = ['Bitte den Marker mit den Pfeiltasten links/rechts bewegen. Drücken Sie ENTER zum Bestätigen. Drücken Sie ESC zum Beenden.'];
                     case 'en'
                         obj.sliderStr = ['Move the marker using left/right arrows. Press ENTER to confirm. Press ESC to exit'];
                 end
-
+            
                 % Draw instruction text
                 Screen('TextSize', window, 24);
                 DrawFormattedText(window, obj.sliderStr, 'center', sliderYOffset + 120, white);
