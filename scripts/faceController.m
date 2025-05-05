@@ -6,7 +6,7 @@ classdef faceController
     
     methods
 
-            % Empty constructor
+        % Empty constructor
         function obj = faceController()
         end
 

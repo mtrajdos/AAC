@@ -45,7 +45,7 @@
 lang = 'de';
 
 currentBaselineTrials = 1;
-targetBaselineTrials = 18; 
+targetBaselineTrials = 18;
 
 currentConflictTrials = 1;
 targetConflictTrials = 54;
@@ -81,7 +81,7 @@ try
     end
 
     % Display instructions for baseline phase indexed as 0
-    ic.displayInstruction(window, white, lang, 0)
+    ic.displayInstruction(window  , white, lang, 0)
     
     % Wait for a spacebar press before continuing
     % Only allow Spacebar key to be detected
@@ -93,7 +93,7 @@ try
     while currentBaselineTrials <= targetBaselineTrials
 
         % Run the trial
-        decisionHistory = tc.runBaselineTrial(window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang);
+        decisionHistory = tc.runTrial(window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang, 'baseline');
         
         % Check if this was the last trial
         if currentBaselineTrials == targetBaselineTrials
@@ -106,7 +106,7 @@ try
         currentBaselineTrials = currentBaselineTrials + 1;
     end
 
-    disp('Subject decisions after baseline phase:');
+    disp('Subject decisions after baseline phase: ');
     disp(struct2table(decisionHistory));
 
     % Display instructions for conflict phase indexed as 1
@@ -122,7 +122,7 @@ try
     while currentConflictTrials <= targetConflictTrials
 
         % Run the trial
-        decisionHistory = tc.runConflictTrial(window, windowRect, red, grey, white, fc, kc, currentConflictTrials, decisionHistory, lang);
+        [decisionHistory, score] = tc.runTrial(window, windowRect, red, grey, white, fc, kc, currentConflictTrials, decisionHistory, lang, 'conflict');
         
         % Check if this was the last trial
         if currentConflictTrials == targetConflictTrials
@@ -132,14 +132,16 @@ try
         end
         
         % Increment the counter for the next trial
-        currentBaselineTrials = currentBaselineTrials + 1;
+        currentConflictTrials = currentConflictTrials + 1;
     end
 
-    disp('Subject decisions after conflict phase:');
+    fprintf('Subject decisions after conflict phase with %d points:', score);
     disp(struct2table(decisionHistory));
 
     % Display conslusive message at the end of the experiment
     ic.displayCompletion(window, white, grey, 2);
+
+    Screen('CloseAll');
 
 catch error
     % Clean up in case of error

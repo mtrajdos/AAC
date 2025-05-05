@@ -2,10 +2,13 @@ classdef trialController
     %% Initialize parameters
     properties
         % Placeholder for aversive outcome probability
-        aversiveProbability = int32(0);
+        aversiveProbability = 0;
 
         % Slider controller instance
         sc = sliderController();
+
+        % Point controller instance
+        pc = pointController();
 
         % Durations of texture displays (s)
         fixationDur = 0.3;
@@ -16,10 +19,30 @@ classdef trialController
 
         % Set scaling factor (e.g., 1.5 for 150% size)
         scale = 2;
+
+        % Set reward info box properties
+        boxWidth = 400;
+        boxHeight = 90;
+
+        % Point reward storage for individual trials
+        currentTrialPoints = 0;
     end
     
     methods
-        function decisionHistory = runBaselineTrial(obj, window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang)
+        function [decisionHistory, varargout] = runTrial(obj, window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang, trialType)
+
+            % Initialize constant aversive outcome
+            persistent aversiveTexture;
+
+            % Initialize score
+            score = obj.pc.totalPoints;
+
+            % If conflict phase, randomize a reward (2, 4 or 6 points)
+            if strcmp(trialType, 'conflict') 
+            obj.pc = obj.pc.drawReward();
+            obj.currentTrialPoints = obj.pc.pointsToWin; % Store for use in drawScreen
+            end
+            
             % Get window dimensions and center coordinates
             [width, height] = Screen('WindowSize', window);
             [xCenter, yCenter] = RectCenter(windowRect);
@@ -35,12 +58,15 @@ classdef trialController
             % Get faces
             neutralFaceTexture = fc.getRandomFace('neutral');
             angryFaceTexture = fc.getRandomFace('angry');
-            aversiveOutcomeTexture = fc.getAversiveOutcome(window, './sprites/faces/angry/faces_03_ang_f.jpg');
+
+            if isempty(aversiveTexture)
+            aversiveTexture = fc.getAversiveOutcome(window, './sprites/faces/angry/faces_03_ang_f.jpg');
+            end
   
             % Get original image sizes
             [neutralWidth, neutralHeight] = fc.getImageSize(neutralFaceTexture);
             [angryWidth, angryHeight] = fc.getImageSize(angryFaceTexture);
-            aversiveOutcomeRect = fc.scaleAversiveOutcomeImage(aversiveOutcomeTexture, obj.scale, xCenter, yCenter);
+            aversiveOutcomeRect = fc.scaleAversiveOutcomeImage(aversiveTexture, obj.scale, xCenter, yCenter);
             
             % Define vertical position just above the slider
             imageBottomY = sliderYOffset - 700;
@@ -77,13 +103,39 @@ classdef trialController
                 WaitSecs(obj.fixationDur);
             end
             
-            function drawScreen()
+            function drawScreen(~)
+                
                 % Draw background
                 Screen('FillRect', window, grey);
                 
                 % Display faces
                 Screen('DrawTexture', window, neutralFaceTexture, [], neutralFaceRect, 0);
                 Screen('DrawTexture', window, angryFaceTexture, [], angryFaceRect, 0);
+
+                
+                % Display information about points to win, if applicable
+                if strcmp(trialType, 'conflict') == 1
+
+                    % Get point reward for this trial
+                    pts = eval('obj.currentTrialPoints');
+
+                    switch lang
+                    case 'de'
+                        pointsText = sprintf('Chance auf %d Punkte zu gewinnen', pts);
+                    case 'en'
+                        pointsText = sprintf('Chance to win %d points', pts);
+                    end
+
+                    boxRect = CenterRectOnPointd([0 0 obj.boxWidth obj.boxHeight], xCenter, sliderYOffset - 300);
+                    Screen('FillRect', window, [80 80 80], boxRect);
+                    Screen('FrameRect', window, white, boxRect, 2);
+
+                    % Set text size
+                    Screen('TextSize', window, 24);
+        
+                    % Draw the text centered in the box
+                    DrawFormattedText(window, pointsText, 'center', boxRect(2) + obj.boxHeight/2 - 12, white);
+                end
                 
                 % Draw the slider
                 Screen('FillRect', window, slider.scaleColor, [slider.axesRect, slider.ticRects]);
@@ -122,15 +174,20 @@ classdef trialController
             
                 switch lang
                     case 'de'
-                        obj.sliderStr = ['Bitte den Marker mit den Pfeiltasten links/rechts bewegen. Drücken Sie ENTER zum Bestätigen. Drücken Sie ESC zum Beenden.'];
+                        obj.sliderStr = 'Bitte den Marker mit den Pfeiltasten links/rechts bewegen. Drücken Sie ENTER zum Bestätigen. Drücken Sie ESC zum Beenden.';
                     case 'en'
-                        obj.sliderStr = ['Move the marker using left/right arrows. Press ENTER to confirm. Press ESC to exit'];
+                        obj.sliderStr = 'Move the marker using left/right arrows. Press ENTER to confirm. Press ESC to exit';
                 end
             
                 % Draw instruction text
                 Screen('TextSize', window, 24);
                 DrawFormattedText(window, obj.sliderStr, 'center', sliderYOffset + 120, white);
                 Screen('Flip', window);
+
+                if nargin > 0
+                    
+                end
+
             end
             
             % Display fixation point first
@@ -169,7 +226,7 @@ classdef trialController
                         obj.aversiveProbability = tickValue / 100;
                         
                         % Save decision with tick values
-                        newDecision = struct('type', 'baseline', ...
+                        newDecision = struct('type', trialType, ...
                                             'trialNo', currentBaselineTrials, ...
                                             'start', str2double(slider.labels{initialPosition}), ...
                                             'end', tickValue);
@@ -184,9 +241,54 @@ classdef trialController
                         isDecisionMade = true;
                         
                     elseif keyCode(kc.escape)
-                        % Early exit
-                        fprintf('Trial interrupted by user pressing Escape key\n');
+                        % Early exit - perform thorough cleanup
+                        fprintf('Trial interrupted by user pressing Escape key. Cleaning up...\n');
+                        
+                        % Close specific textures first
+                        if exist('neutralFaceTexture', 'var') && neutralFaceTexture > 0
+                            Screen('Close', neutralFaceTexture);
+                        end
+                        
+                        if exist('angryFaceTexture', 'var') && angryFaceTexture > 0
+                            Screen('Close', angryFaceTexture);
+                        end
+                        
+                        if exist('aversiveTexture', 'var') && aversiveTexture > 0
+                            Screen('Close', aversiveTexture);
+                        end
+                        
+                        if isfield(slider, 'imageTexture') && slider.imageTexture > 0
+                            Screen('Close', slider.imageTexture);
+                        end
+                        
+                        % Clear all variables
+                        clear aversiveTexture neutralFaceTexture angryFaceTexture slider;
+                        
+                        % Reset persistent variables
+                        clear functions;
+                        
+                        % Close all textures
+                        Screen('Close');
+                        
+                        % Close all windows
                         Screen('CloseAll');
+                        
+                        % Clear screen
+                        sca;
+                        
+                        % Reset priority
+                        Priority(0);
+                        
+                        % Show cursor
+                        ShowCursor;
+                        
+                        % Restore keyboard
+                        RestrictKeysForKbCheck([]);
+                        
+                        % Clear memory
+                        WaitSecs(0.1);  % Brief pause to let operations complete
+                        clear mex;      % Clear MEX files
+                        clear all;      % Clear all variables
                         return
                     end
                     
@@ -201,19 +303,22 @@ classdef trialController
             % Display angry face based on probability,
             % otherwise empty screen
             if rand() <= obj.aversiveProbability 
-                Screen('DrawTexture', window, aversiveOutcomeTexture, [], aversiveOutcomeRect, 0);
+                Screen('DrawTexture', window, aversiveTexture, [], aversiveOutcomeRect, 0);
                 Screen('Flip', window);
                 WaitSecs(obj.faceDur)
+                obj.pc.totalPoints = obj.pc.totalPoints + obj.pc.pointsToWin;
             else
                 Screen('FillRect', window, grey);
                 Screen('Flip', window);
                 WaitSecs(obj.faceDur)
             end
-        end
 
-        function decisionHistory = runConflictTrial(obj, window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang)
-            fprintf('conflict trial')
-        end
+        score = obj.pc.totalPoints;
 
+        % Check if points output is requested
+        if nargout > 1
+            varargout{1} = score;
+        end
+        end
     end
 end
