@@ -80,11 +80,11 @@ try
         fprintf('First neutral face path: %s\n', fullfile(neutralFacesPath(1).folder, neutralFacesPath(1).name));
     end
 
-    % Display baseline instruction indexed as 0
+    % Display instructions for baseline phase indexed as 0
     ic.displayInstruction(window, white, lang, 0)
     
-    % Wait for an Enter press before continuing
-    % Only allow Enter key to be detected
+    % Wait for a spacebar press before continuing
+    % Only allow Spacebar key to be detected
     RestrictKeysForKbCheck(kc.space);
     KbStrokeWait;
     RestrictKeysForKbCheck([]);  % Restore all keys
@@ -98,11 +98,7 @@ try
         % Check if this was the last trial
         if currentBaselineTrials == targetBaselineTrials
             % Overwrite the fixation with completion screen
-            WaitSecs(0.5)
-            Screen('FillRect', window, grey);
-            DrawFormattedText(window, 'Baseline phase complete!', 'center', 'center', white);
-            Screen('Flip', window);
-            WaitSecs(2);
+            ic.displayCompletion(window, white, grey, 0)
             break;
         end
         
@@ -110,10 +106,40 @@ try
         currentBaselineTrials = currentBaselineTrials + 1;
     end
 
-    disp('Subject decisions in baseline phase:');
+    disp('Subject decisions after baseline phase:');
     disp(struct2table(decisionHistory));
 
+    % Display instructions for conflict phase indexed as 1
     ic.displayInstruction(window, white, lang, 1)
+
+    % Wait for a spacebar press before continuing
+    % Only allow Spacebar key to be detected
+    RestrictKeysForKbCheck(kc.space);
+    KbStrokeWait;
+    RestrictKeysForKbCheck([]);  % Restore all keys
+
+    % Run baseline trials
+    while currentConflictTrials <= targetConflictTrials
+
+        % Run the trial
+        decisionHistory = tc.runConflictTrial(window, windowRect, red, grey, white, fc, kc, currentConflictTrials, decisionHistory, lang);
+        
+        % Check if this was the last trial
+        if currentConflictTrials == targetConflictTrials
+            % Overwrite the fixation with completion screen
+            ic.displayCompletion(window, white, grey, 1)
+            break;
+        end
+        
+        % Increment the counter for the next trial
+        currentBaselineTrials = currentBaselineTrials + 1;
+    end
+
+    disp('Subject decisions after conflict phase:');
+    disp(struct2table(decisionHistory));
+
+    % Display conslusive message at the end of the experiment
+    ic.displayCompletion(window, white, grey, 2);
 
 catch error
     % Clean up in case of error

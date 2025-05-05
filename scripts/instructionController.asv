@@ -63,26 +63,21 @@ classdef instructionController
             Screen('Flip', window);
         end
 
-        function displayCompletion(window, white, grey, instrIndex)
+        function displayCompletion(instrIndex)
             if instrIndex == 0
                 WaitSecs(0.5)
                 Screen('FillRect', window, grey);
                 DrawFormattedText(window, 'Baseline phase complete!', 'center', 'center', white);
                 Screen('Flip', window);
                 WaitSecs(2);
-            elseif instrIndex == 1
+            end
+            if instrIndex == 1
                 WaitSecs(0.5)
                 Screen('FillRect', window, grey);
                 DrawFormattedText(window, 'Conflict phase complete!', 'center', 'center', white);
-                Screen('Flip', window);
-                WaitSecs(2);
-            else
-                WaitSecs(0.5)
-                Screen('FillRect', window, grey);
-                DrawFormattedText(window, 'Experiment complete!', 'center', 'center', white);
-                Screen('Flip', window);
-                WaitSecs(2);
-            end
+                 Screen('Flip', window);
+                    WaitSecs(2);
+            end     
         end
     end
 end

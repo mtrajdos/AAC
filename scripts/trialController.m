@@ -210,5 +210,10 @@ classdef trialController
                 WaitSecs(obj.faceDur)
             end
         end
+
+        function decisionHistory = runConflictTrial(obj, window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang)
+            fprintf('conflict trial')
+        end
+
     end
 end
