@@ -70,17 +70,18 @@ classdef faceController
             height = rect(4) - rect(2);
         end
 
-        function aversiveOutcomeRect = scaleAversiveOutcomeImage(obj, texture, scaleFactor, xCenter, yCenter)
-            
-            [aversiveWidth, aversiveHeight] = obj.getImageSize(texture);
+        function [width, height] = getImageSize(~, texture)
+            rect = Screen('Rect', texture);
+            width = rect(3) - rect(1);
+            height = rect(4) - rect(2);
+        end
+
+                    % Calculate aspect ratio
+            aversiveAspectRatio = aversiveWidth / aversiveHeight;
 
             % Calculate new dimensions of aversive outcome while maintaining aspect ratio
-            newAversiveHeight = aversiveHeight * scaleFactor;
-            newAversiveWidth = aversiveWidth * scaleFactor;
-
-            aversiveOutcomeRect = CenterRectOnPointd([0 0 newAversiveWidth newAversiveHeight], xCenter, yCenter);
-
-        end
+            newHeight = aversiveHeight * scaleFactor;
+            newWidth = newHeight * aspectRatio;
 
         function aversiveTexture = getAversiveOutcome(~, window, aversiveOutcomePath)
             try
@@ -90,6 +91,7 @@ classdef faceController
                 % Make texture and store the pointer
                 aversiveTexture = Screen('MakeTexture', window, img);
                 fprintf('Loaded aversive outcome: %s', aversiveOutcomePath);
+                Screen('Auxilliary', aversiveTexture, 'scaleFactor', scale);
             catch error
                 rethrow(error)                
             end

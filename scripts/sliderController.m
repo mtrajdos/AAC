@@ -1,18 +1,23 @@
 classdef sliderController
     methods (Static)
         function slider = loadSlider(window, windowRect)
-            % Create a basic slider structure based on aw_likertScaleNew20241113
+
+            % Create a basic slider structure
             slider = struct();
+
             % Store window info
             slider.window = window;
             slider.windowRect = windowRect;
             slider.nSteps = 7;
+
             % Labels based on the image (numbers 20-80)
             slider.labels = {'20', '30', '40', '50', '60', '70', '80'};
+
             % Set random initial position between 1 and 7
             slider.defaultPosition = randi([1, 7]);
             slider.currentPosition = slider.defaultPosition;
             slider.finalPosition = NaN;
+
             % Appearance settings
             slider.scaleWidth = round(windowRect(3)/1.2);
             slider.textSize = 20;
@@ -21,6 +26,7 @@ classdef sliderController
             slider.scaleColor = [255, 255, 255];
             slider.activeColor = [0, 255, 0];
             slider.ticTextGap = 3;
+            
             % Calculate slider screen elements
             activeAddon = 3;
             [xCenter, yCenter] = RectCenter(windowRect);
@@ -62,7 +68,7 @@ classdef sliderController
                     slider.imageRect = [0, 0, imageWidth, imageHeight];
                 end
             catch e
-                warning('Failed to load image: %s', e.message);
+                warning('Failed to load image: %s', E.message);
                 slider.hasImage = false;
             end
         end

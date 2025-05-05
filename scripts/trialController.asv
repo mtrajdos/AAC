@@ -1,28 +1,17 @@
 classdef trialController
-    %% Initialize parameters
     properties
-        % Placeholder for aversive outcome probability
+        % Initialize parameters
         aversiveProbability = int32(0);
-
-        % Slider controller instance
         sc = sliderController();
-
-        % Durations of texture displays (s)
         fixationDur = 0.3;
         faceDur = 0.7;
-
-        % Info string under slider
         sliderStr = '';
-
-        % Set scaling factor (e.g., 1.5 for 150% size)
-        scale = 2;
     end
     
     methods
         function decisionHistory = runBaselineTrial(obj, window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang)
-            % Get window dimensions and center coordinates
+            % Get window dimensions
             [width, height] = Screen('WindowSize', window);
-            [xCenter, yCenter] = RectCenter(windowRect);
             
             % Load the slider
             slider = sliderController.loadSlider(window, windowRect);
@@ -35,12 +24,11 @@ classdef trialController
             % Get faces
             neutralFaceTexture = fc.getRandomFace('neutral');
             angryFaceTexture = fc.getRandomFace('angry');
-            aversiveOutcomeTexture = fc.getAversiveOutcome(window, './sprites/faces/angry/faces_03_ang_f.jpg');
+aversiveOutcomeTexture = fc.getAversiveOutcome(window, './sprites/faces/angry/faces_03_ang_f.jpg');
   
             % Get original image sizes
             [neutralWidth, neutralHeight] = fc.getImageSize(neutralFaceTexture);
             [angryWidth, angryHeight] = fc.getImageSize(angryFaceTexture);
-            aversiveOutcomeRect = fc.scaleAversiveOutcomeImage(aversiveOutcomeTexture, obj.scale, xCenter, yCenter);
             
             % Define vertical position just above the slider
             imageBottomY = sliderYOffset - 700;
@@ -72,6 +60,7 @@ classdef trialController
                 Screen('FillRect', window, grey);
                 
                 % Display fixation
+                [xCenter, yCenter] = RectCenter(windowRect);
                 Screen('FillOval', window, red, [xCenter-5 yCenter-5 xCenter+5 yCenter+5]);
                 Screen('Flip', window);
                 WaitSecs(obj.fixationDur);
@@ -201,7 +190,7 @@ classdef trialController
             % Display angry face based on probability,
             % otherwise empty screen
             if rand() <= obj.aversiveProbability 
-                Screen('DrawTexture', window, aversiveOutcomeTexture, [], aversiveOutcomeRect, 0);
+                Screen('DrawTexture', window, angryFac, [], [], 0);
                 Screen('Flip', window);
                 WaitSecs(obj.faceDur)
             else
