@@ -31,57 +31,36 @@
     
     % Set text properties
     textSize = 24;
-
     Screen('TextFont', window, 'Arial');
     Screen('TextSize', window, textSize);
-    Screen('TextStyle', window, 1);  % Bold + Italic
-
-    % Hide cursor and suppress keypresses to Matlab window
-    ShowCursor;
+    Screen('TextStyle', window, 1);  % Bold
 
 
 %% Initialize experiment parameters
 
 lang = 'de';
 
-currentBaselineTrials = 1;
+currentBaselineTrials = 16;
 targetBaselineTrials = 18;
 
-currentConflictTrials = 1;
+currentConflictTrials = 52;
 targetConflictTrials = 54;
-
-angryFacesPath = dir(fullfile('./sprites/faces/angry', '*.jpg'));
-neutralFacesPath = dir(fullfile('./sprites/faces/neutral', '*.jpg'));
 
 decisionWindow = double(4.000000);
 decisionHistory = [];
 
-score = int32(0);
+score  = int32(0);
 
 % Run the application
 
 try
-    % Create module instances and preload faces
-    fc = faceController();
-    fc = fc.loadFaces(window, angryFacesPath, neutralFacesPath);
-    tc = trialController();
+    % Create module instancess
+    tc = trialController(window, windowRect, lang);
     ic = instructionController();
     kc = keyboardController();
 
-    % Debug
-    fprintf('Found %d angry face images\n', length(angryFacesPath));
-    fprintf('Found %d neutral face images\n', length(neutralFacesPath));
-
-    if ~isempty(angryFacesPath)
-        fprintf('First angry face path: %s\n', fullfile(angryFacesPath(1).folder, angryFacesPath(1).name));
-    end
-    
-    if ~isempty(neutralFacesPath)
-        fprintf('First neutral face path: %s\n', fullfile(neutralFacesPath(1).folder, neutralFacesPath(1).name));
-    end
-
     % Display instructions for baseline phase indexed as 0
-    ic.displayInstruction(window  , white, lang, 0)
+    ic.displayInstruction(window, white, lang, 0)
     
     % Wait for a spacebar press before continuing
     % Only allow Spacebar key to be detected
@@ -89,11 +68,13 @@ try
     KbStrokeWait;
     RestrictKeysForKbCheck([]);  % Restore all keys
 
+    ShowCursor;
+
     % Run baseline trials
     while currentBaselineTrials <= targetBaselineTrials
 
         % Run the trial
-        decisionHistory = tc.runTrial(window, windowRect, red, grey, white, fc, kc, currentBaselineTrials, decisionHistory, lang, 'baseline');
+        decisionHistory = tc.runTrial(red, grey, white, kc, currentBaselineTrials, decisionHistory, 'baseline');
         
         % Check if this was the last trial
         if currentBaselineTrials == targetBaselineTrials
@@ -118,11 +99,11 @@ try
     KbStrokeWait;
     RestrictKeysForKbCheck([]);  % Restore all keys
 
-    % Run baseline trials
+    % Run conflict trials
     while currentConflictTrials <= targetConflictTrials
 
         % Run the trial
-        [decisionHistory, score] = tc.runTrial(window, windowRect, red, grey, white, fc, kc, currentConflictTrials, decisionHistory, lang, 'conflict');
+        [decisionHistory, score] = tc.runTrial(red, grey, white, kc, currentConflictTrials, decisionHistory, 'conflict');
         
         % Check if this was the last trial
         if currentConflictTrials == targetConflictTrials
@@ -135,12 +116,14 @@ try
         currentConflictTrials = currentConflictTrials + 1;
     end
 
-    fprintf('Subject decisions after conflict phase with %d points:', score);
+    fprintf('[Score: %d]\nSubject decisions after conflict phase:\n', score);
     disp(struct2table(decisionHistory));
 
     % Display conslusive message at the end of the experiment
     ic.displayCompletion(window, white, grey, 2);
 
+    tc.cleanUp(tc);
+    Screen('Close');
     Screen('CloseAll');
 
 catch error

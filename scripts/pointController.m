@@ -3,15 +3,14 @@ classdef pointController
         lowRewardCount = 0;
         midRewardCount = 0;
         highRewardCount = 0;
-        totalPoints = 0;
-        pointsToWin = 0;
+        reward = int32(0);
     end
     
     methods
         function obj = drawReward(obj)
             % Check if all reward conditions have reached 19
             if obj.lowRewardCount >= 19 && obj.midRewardCount >= 19 && obj.highRewardCount >= 19
-                obj.pointsToWin = NaN;
+                obj.reward = NaN;
                 return;
             end
             
@@ -28,13 +27,13 @@ classdef pointController
                     % Assign reward based on type
                     switch rewardType
                         case 1
-                            obj.pointsToWin = 2;
+                            obj.reward = 2;
                             obj.lowRewardCount = obj.lowRewardCount + 1;
                         case 2
-                            obj.pointsToWin = 4;
+                            obj.reward = 4;
                             obj.midRewardCount = obj.midRewardCount + 1;
                         case 3
-                            obj.pointsToWin = 6;
+                            obj.reward = 6;
                             obj.highRewardCount = obj.highRewardCount + 1;
                     end
                     break;
@@ -43,7 +42,7 @@ classdef pointController
         end
 
         function pointsToWinString = getPointsToWinText(obj)
-            pointsToWinString = string(obj.pointsToWin);
+            pointsToWinString = string(obj.reward);
         end
     end
 end

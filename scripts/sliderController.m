@@ -1,4 +1,8 @@
 classdef sliderController
+    properties
+        % Info text under the slider
+        sliderStr = '';
+    end
     methods (Static)
         function slider = loadSlider(window, windowRect)
 
@@ -56,8 +60,8 @@ classdef sliderController
                     imageRGBA(:,:,1:3) = imageData;
                     imageRGBA(:,:,4) = alpha;
                     
-                    % Create texture with alpha blending enabled
-                    slider.imageTexture = Screen('MakeTexture', window, imageRGBA);
+                    % Create avatar texture with alpha blending enabled
+                    slider.avatarTexture = Screen('MakeTexture', window, imageRGBA);
                     
                     % Store image information
                     slider.hasImage = true;
@@ -65,7 +69,7 @@ classdef sliderController
                     slider.imageHeight = imageHeight;
                     
                     % Calculate position (centered horizontally above the slider ticks)
-                    slider.imageRect = [0, 0, imageWidth, imageHeight];
+                    slider.avatarRect = [0, 0, imageWidth, imageHeight];
                 end
             catch e
                 warning('Failed to load image: %s', E.message);
