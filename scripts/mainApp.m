@@ -40,10 +40,10 @@
 
 lang = 'de';
 
-currentBaselineTrials = 16;
+currentBaselineTrials = 1;
 targetBaselineTrials = 18;
 
-currentConflictTrials = 52;
+currentConflictTrials = 1;
 targetConflictTrials = 54;
 
 decisionWindow = double(4.000000);
