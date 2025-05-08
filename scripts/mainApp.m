@@ -5,7 +5,9 @@
     
     % Set parameters
     screens = Screen('Screens');
-    screenNumber = min(screens) + 1;
+    screenNumber = min(screens) + 1; 
+
+     
     
     % Configure Screen preferences as in FFP2Direct
     Screen('Preference', 'SkipSyncTests', 1);
@@ -16,10 +18,12 @@
     black = BlackIndex(screenNumber);
     red = [255 0 0];
     grey = [110 110 110]; % Match the background of face images
-    midgray = round((white+black)/2);
+    midgray = round((white+black)/2); 
     inc = white-midgray;
     
-    % Open window
+    % Open window 
+
+     
     [window, windowRect] = Screen('OpenWindow', screenNumber, grey);
     
     % Get timing parameters (from FFP2Direct)
@@ -38,27 +42,40 @@
 
 %% Initialize experiment parameters
 
+% Set language
 lang = 'de';
 
+% Set number of seconds that the subject will have in each trial
+decisionTime = double(6.00000);
+
+% Starting with baseline trial number 1, test until 18 baseline trials
 currentBaselineTrials = 17;
 targetBaselineTrials = 18;
 
+% Starting with conflict trial number 1, test until 54 conflict trials
 currentConflictTrials = 1;
 targetConflictTrials = 54;
 
+% Initialize array for subject decisions
 decisionHistory = [];
+
+% Initialize score counter
 score  = int32(0);
 
-% Run the application
+% Set point thresholds for rewards
+bronze = 50;
+silver = 81;
+gold = 121;
 
+% Run the experiment
 try
     % Create module instancess
-    tc = trialController(window, windowRect, lang);
-    ic = instructionController();
+    tc = trialController(window, windowRect, lang, decisionTime);
+    ic = instructionController(bronze, silver, gold);
     kc = keyboardController();
 
     % Display instructions for baseline phase indexed as 0
-    ic.displayInstruction(window, white, lang, 0)
+    ic.displayInstruction(ic, window, white, lang, 0)
     
     % Wait for a spacebar press before continuing
     % Only allow Spacebar key to be detected
@@ -85,11 +102,12 @@ try
         currentBaselineTrials = currentBaselineTrials + 1;
     end
 
+    % Display subject decisions
     disp('Subject decisions after baseline phase: ');
     disp(struct2table(decisionHistory));
 
     % Display instructions for conflict phase indexed as 1
-    ic.displayInstruction(window, white, lang, 1)
+    ic.displayInstruction(ic, window, white, lang, 1)
 
     % Wait for a spacebar press before continuing
     % Only allow Spacebar key to be detected
@@ -114,12 +132,14 @@ try
         currentConflictTrials = currentConflictTrials + 1;
     end
 
+    % Display subject's score after conflict phase
     fprintf('[Score: %d]\nSubject decisions after conflict phase:\n', score);
     disp(struct2table(decisionHistory));
 
     % Display conslusive message at the end of the experiment
     ic.displayCompletion(window, white, grey, 2);
 
+    % Clean up remaining textures
     tc.cleanUp(tc);
     Screen('Close');
     Screen('CloseAll');

@@ -6,7 +6,7 @@ classdef trialController < handle
         lang;
 
         % Time allocated for subject's decision
-        decisionWindow = double(6.000000);
+        decisionWindow;
 
         % Placeholder for aversive outcome probability
         aversiveProbability = 0;
@@ -71,7 +71,7 @@ classdef trialController < handle
     methods
         % Constructor loading all constant
         % graphical components of each trial
-        function obj = trialController(window, windowRect, lang)
+        function obj = trialController(window, windowRect, lang, decisionTime)
 
             % Set PTB window properties
             obj.window = window;
@@ -82,6 +82,9 @@ classdef trialController < handle
 
             % Initialize score counter
             obj.score = int32(0);
+
+            % Set time for participant's decision
+            obj.decisionWindow = decisionTime;
 
             % Preload all faces to face controller instance
             obj.fc = obj.fc.loadFaces(window, obj.angryFacesPath, obj.neutralFacesPath);
