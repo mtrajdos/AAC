@@ -1,3 +1,5 @@
+%%% TODO : migrate text properties to a reusable (global?) property
+
 classdef trialController < handle
     %% Initialize parameters
     properties
@@ -45,8 +47,8 @@ classdef trialController < handle
         yCenter;
 
         % Set reward info box properties
-        boxWidth = 400;
-        boxHeight = 70;
+        boxWidth = 700;
+        boxHeight = 60;
         boxRect;
         
         % Properties for constant PTB rectangles across trials
@@ -235,14 +237,15 @@ classdef trialController < handle
 
                     pointsInfo = sprintf(obj.pointsText, pts);
 
+                    % Draw the box
                     Screen('FillRect', obj.window, [80 80 80], obj.boxRect);
                     Screen('FrameRect', obj.window, white, obj.boxRect, 2);
-
-                    % Set text size
+                
+                    % Set text size and style
                     Screen('TextSize', obj.window, 24);
-        
-                    % Draw the text centered in the box
-                    DrawFormattedText(obj.window, pointsInfo, 'center', obj.boxRect(2) + obj.boxHeight/2 - 12, white);
+                    Screen('TextStyle', obj.window, 1); % Bold
+                    
+                    DrawFormattedText(obj.window, pointsInfo, 'center', 'center', white, [], [], [], [], [], obj.boxRect);
                 end
                 
                 % Draw the slider
@@ -395,6 +398,28 @@ classdef trialController < handle
             if strcmp(trialType, 'conflict')
                 obj.score = obj.score + obj.pc.reward;
                 decisionHistory(end).pointsAwarded = obj.pc.reward;
+
+                switch obj.lang
+                    case 'de'
+                        pointsAnnouncement = 'Sie haben %d Punkte gewonnen! Aktuelle Punkte: %d';
+                    case 'en'
+                        pointsAnnouncement = 'You won %d points! Current score: %d';
+                end
+
+                pointsMessage = sprintf(pointsAnnouncement, obj.pc.reward, obj.score);
+
+                % Draw the box
+                Screen('FillRect', obj.window, [80 80 80], obj.boxRect);
+                Screen('FrameRect', obj.window, white, obj.boxRect, 2);
+                
+                % Set text size and style
+                Screen('TextSize', obj.window, 24);
+                Screen('TextStyle', obj.window, 1); % Bold
+                    
+                DrawFormattedText(obj.window, pointsMessage, 'center', 'center', white, [], [], [], [], [], obj.boxRect);
+                Screen('Flip', obj.window);
+                WaitSecs(2);
+
             end
         else
             % No aversive outcome

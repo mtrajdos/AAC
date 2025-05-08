@@ -22,7 +22,6 @@
     inc = white-midgray;
     
     % Open window 
-
      
     [window, windowRect] = Screen('OpenWindow', screenNumber, grey);
     
@@ -39,7 +38,6 @@
     Screen('TextSize', window, textSize);
     Screen('TextStyle', window, 1);  % Bold
 
-
 %% Initialize experiment parameters
 
 % Set language
@@ -49,7 +47,7 @@ lang = 'de';
 decisionTime = double(6.00000);
 
 % Starting with baseline trial number 1, test until 18 baseline trials
-currentBaselineTrials = 17;
+currentBaselineTrials = 1;
 targetBaselineTrials = 18;
 
 % Starting with conflict trial number 1, test until 54 conflict trials
