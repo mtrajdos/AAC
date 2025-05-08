@@ -5,6 +5,9 @@ classdef trialController < handle
         % Language of the experiment
         lang;
 
+        % Time allocated for subject's decision
+        decisionWindow = double(6.000000);
+
         % Placeholder for aversive outcome probability
         aversiveProbability = 0;
 
@@ -284,6 +287,41 @@ classdef trialController < handle
                 end
 
             end
+
+                
+            function finalizeDecision(timeToSaveDecision)
+                    % Save final position
+                    obj.slider.finalPosition = obj.slider.currentPosition;
+                    
+                    % Store tick value
+                    tickValue = str2double(obj.slider.labels{obj.slider.finalPosition});
+                    obj.aversiveProbability = tickValue / 100;
+                    
+                    % Calculate reaction time
+                    reactionTime = GetSecs() - startTime;
+                    if timeToSaveDecision
+                        % Set to full decision window if timeout
+                        reactionTime = obj.decisionWindow;
+                    end
+                    
+                    % Save decision with tick values
+                    newDecision = struct('type', trialType, ...
+                                        'trialNo', currentBaselineTrials, ...
+                                        'start', str2double(obj.slider.labels{initialPosition}), ...
+                                        'end', tickValue, ...
+                                        'pointsAwarded', 0, ...
+                                        'reactionTime', reactionTime);
+                    
+                    % Append to decisions array
+                    if isempty(decisionHistory)
+                        decisionHistory = newDecision;
+                    else
+                        decisionHistory(end+1) = newDecision; %#ok<AGROW>
+                    end
+                    
+                    % Set flag to exit the loop
+                    isDecisionMade = true;
+                end
             
             % Display fixation point first
             drawFixation();
@@ -293,7 +331,19 @@ classdef trialController < handle
             
             % Process key presses
             isDecisionMade = false;
+
+            startTime = GetSecs();
+            endTime = startTime + obj.decisionWindow;
+    
             while ~isDecisionMade
+                % Check if time has expired
+                currentTime = GetSecs();
+                if currentTime >= endTime
+                    % Time expired - automatically finalize with current position
+                    finalizeDecision(true);
+                    break;
+                end
+
                 % Ignore mouse input
                 [~, ~, ~] = GetMouse(obj.window);
                 
@@ -304,36 +354,14 @@ classdef trialController < handle
                         % Move left
                         obj.slider.currentPosition = max(1, obj.slider.currentPosition - 1);
                         drawTrialScreen()
-                        WaitSecs(0.15); % Prevent rapid movement
                         
                     elseif keyCode(kc.right)
                         % Move right
                         obj.slider.currentPosition = min(obj.slider.nSteps, obj.slider.currentPosition + 1);
                         drawTrialScreen()
-                        WaitSecs(0.15); % Prevent rapid movement
                         
                     elseif keyCode(kc.enter)
-                        % Save final position and exit
-                        obj.slider.finalPosition = obj.slider.currentPosition;
-                        
-                        % Store tick value
-                        tickValue = str2double(obj.slider.labels{obj.slider.finalPosition});
-                        obj.aversiveProbability = tickValue / 100;
-                        
-                        % Save decision with tick values
-                        newDecision = struct('type', trialType, ...
-                                            'trialNo', currentBaselineTrials, ...
-                                            'start', str2double(obj.slider.labels{initialPosition}), ...
-                                            'end', tickValue, 'pointsAwarded', 0);
-                        
-                        % Append to decisions array
-                        if isempty(decisionHistory)
-                            decisionHistory = newDecision;
-                        else
-                            decisionHistory(end+1) = newDecision; %#ok<AGROW>
-                        end
-                        
-                        isDecisionMade = true;
+                        finalizeDecision(true)
                         
                     elseif keyCode(kc.escape)
                         % Early exit - perform thorough cleanup

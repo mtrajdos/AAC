@@ -40,15 +40,13 @@
 
 lang = 'de';
 
-currentBaselineTrials = 1;
+currentBaselineTrials = 17;
 targetBaselineTrials = 18;
 
 currentConflictTrials = 1;
 targetConflictTrials = 54;
 
-decisionWindow = double(4.000000);
 decisionHistory = [];
-
 score  = int32(0);
 
 % Run the application
