@@ -1,5 +1,3 @@
-%%% TODO : migrate text properties to a reusable (global?) property
-
 classdef trialController < handle
     %% Initialize parameters
     properties
@@ -47,7 +45,7 @@ classdef trialController < handle
         yCenter;
 
         % Set reward info box properties
-        boxWidth = 700;
+        boxWidth = 630;
         boxHeight = 60;
         boxRect;
         
@@ -192,11 +190,11 @@ classdef trialController < handle
             clear all;      % Clear all variables
         end
 
-        function [decisionHistory, score] = runTrial(obj, red, grey, white, kc, currentBaselineTrials, decisionHistory, trialType)
+        function [decisionHistory, score] = runTrial(obj, red, grey, white, kc, currentTrialCount, targetTrialCount, decisionHistory, trialType)
 
             % If conflict phase, randomize a reward (2, 4 or 6 points)
             if strcmp(trialType, 'conflict') 
-            obj.pc = obj.pc.drawReward();
+            obj.pc = obj.pc.drawReward(targetTrialCount);
             obj.currentTrialPoints = obj.pc.reward; % Store for use in drawTrialScreen
             end
             
@@ -217,35 +215,29 @@ classdef trialController < handle
                 Screen('Flip', obj.window);
                 WaitSecs(obj.fixationDur);
             end
+
+            function drawTextBox(message)
+                Screen('FillRect', obj.window, [80 80 80], obj.boxRect);
+                Screen('FrameRect', obj.window, white, obj.boxRect, 2);
+                DrawFormattedText(obj.window, message, 'center', 'center', white, [], [], [], [], [], obj.boxRect);
+            end
             
             % Assemble graphical components of
             % the trial screen and display them
             function drawTrialScreen()
-                
                 % Draw background
                 Screen('FillRect', obj.window, grey);
-
+            
                 % Display faces
                 Screen('DrawTexture', obj.window, obj.neutralFaceTexture, [], obj.neutralFaceRect, 0);
                 Screen('DrawTexture', obj.window, obj.angryFaceTexture, [], obj.angryFaceRect, 0);
-  
+            
                 % Display information about points to win, if applicable
                 if strcmp(trialType, 'conflict') == 1
-
                     % Get point reward for this trial
                     pts = eval('obj.currentTrialPoints');
-
                     pointsInfo = sprintf(obj.pointsText, pts);
-
-                    % Draw the box
-                    Screen('FillRect', obj.window, [80 80 80], obj.boxRect);
-                    Screen('FrameRect', obj.window, white, obj.boxRect, 2);
-                
-                    % Set text size and style
-                    Screen('TextSize', obj.window, 24);
-                    Screen('TextStyle', obj.window, 1); % Bold
-                    
-                    DrawFormattedText(obj.window, pointsInfo, 'center', 'center', white, [], [], [], [], [], obj.boxRect);
+                    drawTextBox(pointsInfo);  % This now only prepares the elements without flipping
                 end
                 
                 % Draw the slider
@@ -273,9 +265,7 @@ classdef trialController < handle
                 
                 % Highlight current position
                 Screen('FillRect', obj.window, obj.slider.activeColor, obj.slider.activeTicRects(:, obj.slider.currentPosition));
-                
-                % Draw labels
-                Screen('TextSize', obj.window, obj.slider.textSize);
+            
                 for j = 1:obj.slider.nSteps
                     textRect = Screen('TextBounds', obj.window, obj.slider.labels{j});
                     Screen('DrawText', obj.window, obj.slider.labels{j}, ...
@@ -284,50 +274,48 @@ classdef trialController < handle
                 end
             
                 % Draw instruction text
-                Screen('TextSize', obj.window, 24);
                 DrawFormattedText(obj.window, obj.sc.sliderStr, 'center', obj.sliderYOffset + 120, white);
+                
+                % Now flip the screen to show everything at once
                 Screen('Flip', obj.window);
-
-                if nargin > 0
-                    
-                end
-
             end
 
+            function finalizeDecision(wasTimeout)
+                % Save final position
+                obj.slider.finalPosition = obj.slider.currentPosition;
                 
-            function finalizeDecision(timeToSaveDecision)
-                    % Save final position
-                    obj.slider.finalPosition = obj.slider.currentPosition;
-                    
-                    % Store tick value
-                    tickValue = str2double(obj.slider.labels{obj.slider.finalPosition});
-                    obj.aversiveProbability = tickValue / 100;
-                    
-                    % Calculate reaction time
+                % Store tick value
+                tickValue = str2double(obj.slider.labels{obj.slider.finalPosition});
+                obj.aversiveProbability = tickValue / 100;
+                
+                % Calculate reaction time
+                if wasTimeout
+                    % For timeouts, use the full decision window
+                    reactionTime = obj.decisionWindow;
+                else
+                    % For user decisions, calculate the actual time taken
                     reactionTime = GetSecs() - startTime;
-                    if timeToSaveDecision
-                        % Set to full decision window if timeout
-                        reactionTime = obj.decisionWindow;
-                    end
-                    
-                    % Save decision with tick values
-                    newDecision = struct('type', trialType, ...
-                                        'trialNo', currentBaselineTrials, ...
-                                        'start', str2double(obj.slider.labels{initialPosition}), ...
-                                        'end', tickValue, ...
-                                        'pointsAwarded', 0, ...
-                                        'reactionTime', reactionTime);
-                    
-                    % Append to decisions array
-                    if isempty(decisionHistory)
-                        decisionHistory = newDecision;
-                    else
-                        decisionHistory(end+1) = newDecision; %#ok<AGROW>
-                    end
-                    
-                    % Set flag to exit the loop
-                    isDecisionMade = true;
                 end
+                
+                % Save decision with tick values
+                newDecision = struct('type', trialType, ...
+                                    'trialNo', currentTrialCount, ...
+                                    'start', str2double(obj.slider.labels{initialPosition}), ...
+                                    'end', tickValue, ...
+                                    'pointsAwarded', 0, ...
+                                    'reactionTime', reactionTime, ...
+                                    'wasTimeout', wasTimeout);  % Also record if it was a timeout
+                
+                % Append to decisions array
+                if isempty(decisionHistory)
+                    decisionHistory = newDecision;
+                else
+                    decisionHistory(end+1) = newDecision; %#ok<AGROW>
+                end
+                
+                % Set flag to exit the loop
+                isDecisionMade = true;
+            end
             
             % Display fixation point first
             drawFixation();
@@ -367,7 +355,7 @@ classdef trialController < handle
                         drawTrialScreen()
                         
                     elseif keyCode(kc.enter)
-                        finalizeDecision(true)
+                        finalizeDecision(false) % Save decision (not a timeout, but a subject decision)
                         
                     elseif keyCode(kc.escape)
                         % Early exit - perform thorough cleanup
@@ -387,46 +375,55 @@ classdef trialController < handle
             drawFixation();
 
             % Display angry face based on probability, otherwise empty screen
-
-        if rand() <= obj.aversiveProbability
-            % Aversive outcome displays
-            Screen('DrawTexture', obj.window, obj.aversiveTexture, [], obj.aversiveOutcomeRect, 0);
-            Screen('Flip', obj.window);
-            WaitSecs(obj.faceDur);
-            
-            % Award points only in conflict trials
-            if strcmp(trialType, 'conflict')
-                obj.score = obj.score + obj.pc.reward;
-                decisionHistory(end).pointsAwarded = obj.pc.reward;
-
-                switch obj.lang
-                    case 'de'
-                        pointsAnnouncement = 'Sie haben %d Punkte gewonnen! Aktuelle Punkte: %d';
-                    case 'en'
-                        pointsAnnouncement = 'You won %d points! Current score: %d';
-                end
-
-                pointsMessage = sprintf(pointsAnnouncement, obj.pc.reward, obj.score);
-
-                % Draw the box
-                Screen('FillRect', obj.window, [80 80 80], obj.boxRect);
-                Screen('FrameRect', obj.window, white, obj.boxRect, 2);
-                
-                % Set text size and style
-                Screen('TextSize', obj.window, 24);
-                Screen('TextStyle', obj.window, 1); % Bold
+                if rand() <= obj.aversiveProbability
+                    % Aversive outcome displays
+                    Screen('DrawTexture', obj.window, obj.aversiveTexture, [], obj.aversiveOutcomeRect, 0);
+                    Screen('Flip', obj.window);
+                    WaitSecs(obj.faceDur);
                     
-                DrawFormattedText(obj.window, pointsMessage, 'center', 'center', white, [], [], [], [], [], obj.boxRect);
-                Screen('Flip', obj.window);
-                WaitSecs(2);
-
-            end
-        else
-            % No aversive outcome
-            Screen('FillRect', obj.window, grey);
-            Screen('Flip', obj.window);
-            WaitSecs(obj.faceDur);
-        end
+                    % Award points only in conflict trials
+                    if strcmp(trialType, 'conflict')
+                        obj.score = obj.score + obj.pc.reward;
+                        decisionHistory(end).pointsAwarded = obj.pc.reward;
+                
+                        switch obj.lang
+                            case 'de'
+                                pointsAnnouncement = 'Sie haben %d Punkte gewonnen! Aktuelle Punkte: %d + %d = %d';
+                            case 'en'
+                                pointsAnnouncement = 'You won %d points! Current score: %d + %d = %d';
+                        end
+                
+                        message = sprintf(pointsAnnouncement, obj.pc.reward, (obj.score - obj.pc.reward), obj.pc.reward, obj.score);
+                        
+                        % Draw the entire feedback screen
+                        Screen('FillRect', obj.window, grey);
+                        drawTextBox(message);
+                        Screen('Flip', obj.window);
+                        WaitSecs(2);
+                    end
+                else
+                    % No aversive outcome
+                    Screen('FillRect', obj.window, grey);
+                    Screen('Flip', obj.window);
+                    WaitSecs(obj.faceDur);
+                
+                    if strcmp(trialType, 'conflict')
+                        switch obj.lang
+                            case 'de'
+                                pointsAnnouncement = 'Sie haben keine Punkte gewonnen. Aktuelle Punkte: %d';
+                            case 'en'
+                                pointsAnnouncement = 'You did not win any points. Current score: %d';
+                        end
+                
+                        message = sprintf(pointsAnnouncement, obj.score);
+                        
+                        % Draw the entire feedback screen
+                        Screen('FillRect', obj.window, grey);
+                        drawTextBox(message);
+                        Screen('Flip', obj.window);
+                        WaitSecs(2);
+                    end
+                end
             score = obj.score;
         end
     end

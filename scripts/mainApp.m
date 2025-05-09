@@ -6,8 +6,6 @@
     % Set parameters
     screens = Screen('Screens');
     screenNumber = min(screens) + 1; 
-
-     
     
     % Configure Screen preferences as in FFP2Direct
     Screen('Preference', 'SkipSyncTests', 1);
@@ -33,9 +31,8 @@
     [xCenter, yCenter] = RectCenter(windowRect);
     
     % Set text properties
-    textSize = 24;
     Screen('TextFont', window, 'Arial');
-    Screen('TextSize', window, textSize);
+    Screen('TextSize', window, 24);
     Screen('TextStyle', window, 1);  % Bold
 
 %% Initialize experiment parameters
@@ -47,10 +44,12 @@ lang = 'de';
 decisionTime = double(6.00000);
 
 % Starting with baseline trial number 1, test until 18 baseline trials
-currentBaselineTrials = 1;
+currentBaselineTrials = 17;
 targetBaselineTrials = 18;
 
 % Starting with conflict trial number 1, test until 54 conflict trials
+% targetConflictTrials needs to be divisible by 3 due to
+% 3 different reward tiers
 currentConflictTrials = 1;
 targetConflictTrials = 54;
 
@@ -87,7 +86,7 @@ try
     while currentBaselineTrials <= targetBaselineTrials
 
         % Run the trial
-        decisionHistory = tc.runTrial(red, grey, white, kc, currentBaselineTrials, decisionHistory, 'baseline');
+        decisionHistory = tc.runTrial(red, grey, white, kc, currentBaselineTrials, targetBaselineTrials, decisionHistory, 'baseline');
         
         % Check if this was the last trial
         if currentBaselineTrials == targetBaselineTrials
@@ -117,7 +116,7 @@ try
     while currentConflictTrials <= targetConflictTrials
 
         % Run the trial
-        [decisionHistory, score] = tc.runTrial(red, grey, white, kc, currentConflictTrials, decisionHistory, 'conflict');
+        [decisionHistory, score] = tc.runTrial(red, grey, white, kc, currentConflictTrials, targetConflictTrials, decisionHistory, 'conflict');
         
         % Check if this was the last trial
         if currentConflictTrials == targetConflictTrials

@@ -1,15 +1,18 @@
 classdef pointController
     properties
-        lowRewardCount = 0;
-        midRewardCount = 0;
-        highRewardCount = 0;
+        lowRewardCount = 1;
+        midRewardCount = 1;
+        highRewardCount = 1;
         reward = int32(0);
     end
     
     methods
-        function obj = drawReward(obj)
-            % Check if all reward conditions have reached 19
-            if obj.lowRewardCount >= 19 && obj.midRewardCount >= 19 && obj.highRewardCount >= 19
+        function obj = drawReward(obj, targetConflictTrials)
+            % Check if reward tiers are evenly distributed
+            oneThirdOfNumberConflictTrials = targetConflictTrials / 3;
+            if obj.lowRewardCount > oneThirdOfNumberConflictTrials && ... 
+                obj.midRewardCount > oneThirdOfNumberConflictTrials && ... 
+                obj.highRewardCount > oneThirdOfNumberConflictTrials
                 obj.reward = NaN;
                 return;
             end
@@ -20,9 +23,9 @@ classdef pointController
                 rewardType = randi(3);
                 
                 % Check if the selected reward type is still available
-                if (rewardType == 1 && obj.lowRewardCount < 19) || ...
-                   (rewardType == 2 && obj.midRewardCount < 19) || ...
-                   (rewardType == 3 && obj.highRewardCount < 19)
+                if (rewardType == 1 && obj.lowRewardCount <= oneThirdOfNumberConflictTrials) || ...
+                   (rewardType == 2 && obj.midRewardCount <= oneThirdOfNumberConflictTrials) || ...
+                   (rewardType == 3 && obj.highRewardCount <= oneThirdOfNumberConflictTrials)
                     
                     % Assign reward based on type
                     switch rewardType
