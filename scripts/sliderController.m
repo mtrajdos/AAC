@@ -39,7 +39,7 @@ classdef sliderController
             slider.ticRects = [slider.ticPositions; ones(1, slider.nSteps)*yCenter; slider.ticPositions + slider.lineWidth; ones(1, slider.nSteps)*yCenter+slider.tickHeight];
             slider.activeTicRects = [slider.ticPositions-activeAddon; ones(1, slider.nSteps)*yCenter-activeAddon; slider.ticPositions + slider.lineWidth+activeAddon; ones(1, slider.nSteps)*yCenter+slider.tickHeight+activeAddon];
             
-            % Load the manekin image
+            % Load the avatar image
             try
                 % Use fullfile to create proper file path
                 imageFile = fullfile(avatarPath);

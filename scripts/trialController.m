@@ -259,7 +259,7 @@ classdef trialController < handle
                     Screen('FillRect', obj.window, [0.7, 0.7, 0.7], obj.slider.ticRects(:,j));
                 end
                 
-                % Draw the manekin image if available
+                % Draw the avatar image if available
                 if isfield(obj.slider, 'hasImage') && obj.slider.hasImage
                     % Enable alpha blending for transparency
                     Screen('BlendFunction', obj.window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

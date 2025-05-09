@@ -43,7 +43,7 @@ lang = 'de';
 decisionTime = double(6.00000);
 
 % Starting with baseline trial number 1, test until 18 baseline trials
-currentBaselineTrials = 1;
+currentBaselineTrials = 17;
 targetBaselineTrials = 18;
 
 % Starting with conflict trial number 1, test until 54 conflict trials
@@ -78,7 +78,7 @@ try
     kc = keyboardController();
 
     % Display instructions for baseline phase indexed as 0
-    ic.displayInstruction(ic, window, white, lang, 0)
+    ic = ic.displayInstruction(ic, window, white, lang, 0);
     
     % Wait for a spacebar press before continuing
     % Only allow Spacebar key to be detected
@@ -97,7 +97,7 @@ try
         % Check if this was the last trial
         if currentBaselineTrials == targetBaselineTrials
             % Overwrite the fixation with completion screen
-            ic.displayCompletion(window, white, grey, 0)
+            ic.displayCompletion(ic, window, white, grey)
             break;
         end
         
@@ -110,7 +110,7 @@ try
     disp(struct2table(decisionHistory));
 
     % Display instructions for conflict phase indexed as 1
-    ic.displayInstruction(ic, window, white, lang, 1)
+    ic = ic.displayInstruction(ic, window, white, lang, 1);
 
     % Wait for a spacebar press before continuing
     % Only allow Spacebar key to be detected
@@ -127,7 +127,7 @@ try
         % Check if this was the last trial
         if currentConflictTrials == targetConflictTrials
             % Overwrite the fixation with completion screen
-            ic.displayCompletion(window, white, grey, 1)
+            ic.displayCompletion(ic, window, white, grey)
             break;
         end
         
@@ -139,8 +139,8 @@ try
     fprintf('[Score: %d]\nSubject decisions after conflict phase:\n', score);
     disp(struct2table(decisionHistory));
 
-    % Display conslusive message at the end of the experiment
-    ic.displayCompletion(window, white, grey, 2);
+    % Display reward screen at the end of the experiment
+    ic.displayReward(window, white, grey, score);
 
     % Clean up remaining textures
     tc.cleanUp(tc);

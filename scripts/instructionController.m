@@ -20,6 +20,9 @@ classdef instructionController
         % Pointers for medal images
         medals;
 
+        % Offset from top of the screen
+        topPadding;
+
     end
     
     methods (Static)
@@ -34,17 +37,20 @@ classdef instructionController
             };
         end
 
-        function displayInstruction(obj, window, white, lang, instrIndex)
+        function obj = displayInstruction(obj, window, white, lang, instrIndex)
             % Get screen dimensions and center coordinates
             windowRect = Screen('Rect', window);
             [width, height] = Screen('WindowSize', window);
             [xCenter, yCenter] = RectCenter(windowRect);
+
+            % Dynamic top padding calculation
+            topPadding = height * 0.3;
             
             % Get instruction text based on language and instruction index
             switch instrIndex
                 case 0
-                    % Baseline phase instructions
-                    if strcmp(lang, 'de')
+                switch lang
+                    case 'de'
                         obj.instrStr = ['In der folgenden Aufgabe werden Sie auf jedem Bildschirm ein neutrales Gesicht auf der linken Seite ' ...
                         'und ein wütendes Gesicht auf der rechten Seite sehen. ' ...
                         'Ein Markierungspunkt wird zufällig auf einer Linie zwischen diesen Gesichtern platziert. ' ...
@@ -54,8 +60,8 @@ classdef instructionController
                         '(ein schreiendes Gesicht) erscheint. ' ...
                         'Wenn kein unangenehmes Bild erscheint, sehen Sie einen leeren Bildschirm.' ...
                         'Wenn Sie bereit sind, drücken Sie bitte die Leertaste, um mit der Aufgabe zu beginnen.'];
-                        obj.complStr = [''];
-                    else
+                        obj.complStr = 'Erste Phase abgeschlossen!';
+                    case 'en'
                         obj.instrStr = ['In the following task, you will see a neutral face on the left side of each screen and an angry face ' ...
                         'on the right side.  ' ...
                         'A marker point will be randomly placed on a line between these faces.  ' ...
@@ -64,13 +70,14 @@ classdef instructionController
                         'If no unpleasant image appears, you will see a blank screen.' ...
                         '    ' ...
                         'When you are ready, please press the spacebar to begin the task.'];
-                    end
+                        obj.complStr = 'First phase complete!';
+                 end
                     
-                    % Center the text and use wrapat to define the width
                     DrawFormattedText(window, obj.instrStr, 'center', 'center', white, obj.textWrapping, [], [], obj.vSpacing);
                     
                 case 1
-                if strcmp(lang, 'de')
+                switch lang
+                    case 'de'
                     obj.instrStr = ['Bei dieser Aufgabe können Sie Punkte sammeln. ' ...
                     'In jedem Durchgang sehen Sie ein neutrales Gesicht links und ein wütendes Gesicht rechts. ' ...
                     'Ein Marker erscheint auf einer Linie zwischen diesen Gesichtern. ' ...
@@ -90,7 +97,9 @@ classdef instructionController
                         sprintf('Silber: %d-%d', obj.silverThreshold, obj.goldThreshold-1),
                         sprintf('Gold: %d+', obj.goldThreshold)
                     };
-                else
+
+                    obj.complStr = 'Zweite Phase abgeschlossen!';
+                    case 'en'
                     obj.instrStr = ['In this task, you can earn points. ' ...
                     'Each trial shows a neutral face on the left and an angry face on the right. ' ...
                     'A marker appears on a line between these faces. ' ...
@@ -110,13 +119,15 @@ classdef instructionController
                         sprintf('Silver: %d-%d', obj.silverThreshold, obj.goldThreshold-1),
                         sprintf('Gold: %d+', obj.goldThreshold)
                     };
+
+                    obj.complStr = 'Second phase complete!';
                 end
 
-                    DrawFormattedText(window, obj.instrStr, 'center', (height * 0.3), white, obj.textWrapping, [], [], obj.vSpacing);
-                    
+                    DrawFormattedText(window, obj.instrStr, 'center', topPadding, white, obj.textWrapping, [], [], obj.vSpacing);
+
                     % Display medal images for conflict phase
                     displayMedals(window, white, medalLabels, xCenter, height);
-                    
+
                 otherwise
                     error('Input index "%d" is invalid', instrIndex);
             end
@@ -133,11 +144,7 @@ classdef instructionController
                 medalY = height * 0.72;  % Vertical position for medals
                 
                 % Calculate horizontal positions (centered trio of medals)
-                medalX = [
-                    xCenter - medalSpacing,
-                    xCenter,
-                    xCenter + medalSpacing
-                ];
+                medalX = [ xCenter - medalSpacing, xCenter, xCenter + medalSpacing];
                 
                 % Load and display each medal
                 for i = 1:3
@@ -193,26 +200,12 @@ classdef instructionController
             end
         end
 
-        function displayCompletion(window, white, grey, instrIndex)
-            if instrIndex == 0
+        function displayCompletion(obj, window, white, grey)
                 WaitSecs(0.5)
                 Screen('FillRect', window, grey);
-                DrawFormattedText(window, 'Baseline phase complete!', 'center', 'center', white);
-                Screen('Flip', window);
-                WaitSecs(2);
-            elseif instrIndex == 1
-                WaitSecs(0.5)
-                Screen('FillRect', window, grey);
-                DrawFormattedText(window, 'Conflict phase complete!', 'center', 'center', white);
-                Screen('Flip', window);
-                WaitSecs(2);
-            else
-                WaitSecs(0.5)
-                Screen('FillRect', window, grey);
-                DrawFormattedText(window, 'Experiment finished. Closing the app...', 'center', 'center', white);
+                DrawFormattedText(window, obj.complStr, 'center', 'center', white);
                 Screen('Flip', window);
                 WaitSecs(2);
             end
         end
-    end
 end
