@@ -8,28 +8,30 @@ classdef instructionController
         % Instruction text
         instrStr = [''];
 
-        % Text settings
-        textSize = 25;
+        % Completion text
+        complStr = [''];
 
         % How many characters in each line until wrapping a new one
         textWrapping = 120;
 
         % Vertical spacing (distance between text lines)
-        vSpacing = 1.1;
+        vSpacing = 1.2;
 
-        % Text style (1 for bold in PTB TextSize Screen call)
-        textStyle = 1;
+        % Pointers for medal images
+        medals;
 
-        % Font
-        textFont = 'Arial';
     end
     
     methods (Static)
-
-        function obj = instructionController(bronze, silver, gold)
+        function obj = instructionController(bronze, silver, gold, medalsPath)
             obj.bronzeThreshold = bronze;
             obj.silverThreshold = silver;
             obj.goldThreshold = gold;
+            obj.medals = {
+                fullfile(medalsPath, 'bronze.png'), ... 
+                fullfile(medalsPath, 'silver.png'), ...
+                fullfile(medalsPath, 'gold.png'),
+            };
         end
 
         function displayInstruction(obj, window, white, lang, instrIndex)
@@ -37,10 +39,6 @@ classdef instructionController
             windowRect = Screen('Rect', window);
             [width, height] = Screen('WindowSize', window);
             [xCenter, yCenter] = RectCenter(windowRect);
-            
-            Screen('TextSize', window, obj.textSize);
-            Screen('TextStyle', window, obj.textStyle);
-            Screen('TextFont', window, obj.textFont);
             
             % Get instruction text based on language and instruction index
             switch instrIndex
@@ -56,6 +54,7 @@ classdef instructionController
                         '(ein schreiendes Gesicht) erscheint. ' ...
                         'Wenn kein unangenehmes Bild erscheint, sehen Sie einen leeren Bildschirm.' ...
                         'Wenn Sie bereit sind, drücken Sie bitte die Leertaste, um mit der Aufgabe zu beginnen.'];
+                        obj.complStr = [''];
                     else
                         obj.instrStr = ['In the following task, you will see a neutral face on the left side of each screen and an angry face ' ...
                         'on the right side.  ' ...
@@ -127,12 +126,6 @@ classdef instructionController
             
             % Nested function to display medals (only used in conflict phase)
             function displayMedals(window, white, medalLabels, xCenter, height)
-                % Define medal image paths
-                medalPaths = {
-                    fullfile('.', 'sprites', 'medals', 'bronze.png'),
-                    fullfile('.', 'sprites', 'medals', 'silver.png'),
-                    fullfile('.', 'sprites', 'medals', 'gold.png')
-                };
                 
                 % Define medal display parameters
                 medalScale = 0.8;  % Scaling factor for medal size
@@ -151,13 +144,13 @@ classdef instructionController
                     % Load the medal image with alpha channel
                     try
                         % Check if file exists
-                        if ~exist(medalPaths{i}, 'file')
-                            warning('Medal image file not found: %s', medalPaths{i});
+                        if ~exist(obj.medals{i}, 'file')
+                            warning('Medal image file not found: %s', obj.medals{i});
                             continue;
                         end
                         
                         % Load the image with alpha channel
-                        [imageData, ~, alpha] = imread(medalPaths{i});
+                        [imageData, ~, alpha] = imread(obj.medals{i});
                         
                         % Get image dimensions
                         [imageHeight, imageWidth, ~] = size(imageData);

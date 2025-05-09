@@ -20,7 +20,6 @@
     inc = white-midgray;
     
     % Open window 
-     
     [window, windowRect] = Screen('OpenWindow', screenNumber, grey);
     
     % Get timing parameters (from FFP2Direct)
@@ -44,7 +43,7 @@ lang = 'de';
 decisionTime = double(6.00000);
 
 % Starting with baseline trial number 1, test until 18 baseline trials
-currentBaselineTrials = 17;
+currentBaselineTrials = 1;
 targetBaselineTrials = 18;
 
 % Starting with conflict trial number 1, test until 54 conflict trials
@@ -66,9 +65,16 @@ gold = 121;
 
 % Run the experiment
 try
+
+    % Populate the current script variable
+    currentScript = mfilename("fullpath");
+
+    % Pointer for path with medal images
+    medalsPath = fullfile(fileparts(fileparts(currentScript)), 'sprites', 'medals');
+
     % Create module instancess
-    tc = trialController(window, windowRect, lang, decisionTime);
-    ic = instructionController(bronze, silver, gold);
+    tc = trialController(window, windowRect, lang, decisionTime, currentScript);
+    ic = instructionController(bronze, silver, gold, medalsPath);
     kc = keyboardController();
 
     % Display instructions for baseline phase indexed as 0

@@ -4,7 +4,7 @@ classdef sliderController
         sliderStr = '';
     end
     methods (Static)
-        function slider = loadSlider(window, windowRect)
+        function slider = loadSlider(window, windowRect, avatarPath)
 
             % Create a basic slider structure
             slider = struct();
@@ -42,7 +42,7 @@ classdef sliderController
             % Load the manekin image
             try
                 % Use fullfile to create proper file path
-                imageFile = fullfile('.', 'sprites', 'Manekin.png');
+                imageFile = fullfile(avatarPath);
                 
                 % Check if file exists
                 if ~exist(imageFile, 'file')

@@ -23,14 +23,18 @@ classdef trialController < handle
         angryFaceTexture;
         neutralFaceTexture;
 
+        % Main path placeholder
+        mainPath;
+
         % Properties of the constant aversive outcome
         aversiveTexture;
         aversiveOutcomeRect;
-        aversiveOutcomePath = './sprites/faces/angry/faces_03_ang_f.jpg';
+        aversiveOutcomePath;
+        avatarImagePath;
 
         % Paths for all face folders
-        angryFacesPath = dir(fullfile('./sprites/faces/angry', '*.jpg'));
-        neutralFacesPath = dir(fullfile('./sprites/faces/neutral', '*.jpg'));
+        angryFacesPath;
+        neutralFacesPath;
 
         % Durations of texture displays (s)
         fixationDur = 0.3;
@@ -45,7 +49,7 @@ classdef trialController < handle
         yCenter;
 
         % Set reward info box properties
-        boxWidth = 630;
+        boxWidth = 700;
         boxHeight = 60;
         boxRect;
         
@@ -71,7 +75,14 @@ classdef trialController < handle
     methods
         % Constructor loading all constant
         % graphical components of each trial
-        function obj = trialController(window, windowRect, lang, decisionTime)
+        function obj = trialController(window, windowRect, lang, decisionTime, currentScript)
+
+            % Initialize path strings
+            obj.mainPath = fileparts(fileparts(currentScript));
+            obj.angryFacesPath = dir([obj.mainPath filesep 'sprites/faces/angry/', '*.jpg']);
+            obj.neutralFacesPath = dir([obj.mainPath filesep 'sprites/faces/neutral/', '*.jpg']);
+            obj.aversiveOutcomePath = [obj.mainPath filesep 'sprites/faces/angry/faces_03_ang_f.jpg'];
+            obj.avatarImagePath = [obj.mainPath filesep 'sprites/Manekin.png'];
 
             % Set PTB window properties
             obj.window = window;
@@ -94,7 +105,7 @@ classdef trialController < handle
             [obj.xCenter, obj.yCenter] = RectCenter(windowRect);
             
             % Load the slider and info texts
-            obj.slider = obj.sc.loadSlider(window, windowRect);
+            obj.slider = obj.sc.loadSlider(window, windowRect, obj.avatarImagePath);
                 switch lang
                     case 'de'
                         obj.sc.sliderStr = 'Bitte den Marker mit den Pfeiltasten links/rechts bewegen. Drücken Sie ENTER zum Bestätigen. Drücken Sie ESC zum Beenden.';

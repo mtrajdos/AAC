@@ -17,6 +17,7 @@ classdef faceController
             
             for i = 1:numAngryFaces
                 % Full path to the image file
+                fprintf(1, '\n%s', angryFacesPath(i).folder);
                 fileName = fullfile(angryFacesPath(i).folder, angryFacesPath(i).name);
                 % Read the image
                 img = imread(fileName);
@@ -30,6 +31,7 @@ classdef faceController
             obj.neutralFaces = zeros(numNeutralFaces, 1);
             
             for i = 1:numNeutralFaces
+                fprintf(1, '\n%s', neutralFacesPath(i).folder)
                 fileName = fullfile(neutralFacesPath(i).folder, neutralFacesPath(i).name);
                 img = imread(fileName);
                 if size(img, 3) == 1 && ~islogical(img)
