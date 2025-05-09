@@ -95,7 +95,7 @@ classdef trialController < handle
             obj.lang = lang;
 
             % Initialize score counter
-            obj.score = int32(130);
+            obj.score = int32(0);
 
             % Set time for participant's decision
             obj.decisionWindow = decisionTime;
@@ -179,7 +179,7 @@ classdef trialController < handle
             % Reset persistent variables
             clear functions;
                         
-            % Close remaining textures
+            % Close all  textures
             Screen('Close');
                         
             % Clear screen

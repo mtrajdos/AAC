@@ -19,15 +19,14 @@
     midgray = round((white+black)/2); 
     inc = white-midgray;
     
-    % Open window 
+    % PTB window parameters
     [window, windowRect] = Screen('OpenWindow', screenNumber, grey);
+    [xCenter, yCenter] = RectCenter(windowRect);
+    [width, height] = Screen('WindowSize', window);
     
     % Get timing parameters (from FFP2Direct)
     FrameDurationInSeconds = Screen('GetFlipInterval', window);
     Slack = FrameDurationInSeconds * 0.5;
-    
-    % Get screen dimensions
-    [xCenter, yCenter] = RectCenter(windowRect);
     
     % Set text properties
     Screen('TextFont', window, 'Arial');
@@ -49,14 +48,14 @@ targetBaselineTrials = 18;
 % Starting with conflict trial number 1, test until 54 conflict trials
 % targetConflictTrials needs to be divisible by 3 due to
 % 3 different reward tiers
-currentConflictTrials = 1;
+currentConflictTrials = 53;
 targetConflictTrials = 54;
 
 % Initialize array for subject decisions
 decisionHistory = [];
 
-% Initialize score counter
-score  = int32(0);
+% Initialize score receiver
+score;
 
 % Set point thresholds for rewards
 bronze = 50;
@@ -73,12 +72,12 @@ try
     medalsPath = fullfile(fileparts(fileparts(currentScript)), 'sprites', 'medals');
 
     % Create module instancess
-    tc = trialController(window, windowRect, lang, decisionTime, currentScript);
-    ic = instructionController(bronze, silver, gold, medalsPath);
+    tc = trialController(lang, decisionTime, currentScript, window, windowRect, xCenter, yCenter, width, height);
+    ic = instructionController(bronze, silver, gold, medalsPath, window, xCenter, height);
     kc = keyboardController();
 
     % Display instructions for baseline phase indexed as 0
-    ic = ic.displayInstruction(ic, window, white, lang, 0);
+    ic = ic.displayInstruction(white, lang, 0);
     
     % Wait for a spacebar press before continuing
     % Only allow Spacebar key to be detected
@@ -97,7 +96,7 @@ try
         % Check if this was the last trial
         if currentBaselineTrials == targetBaselineTrials
             % Overwrite the fixation with completion screen
-            ic.displayCompletion(ic, window, white, grey)
+            ic.displayCompletion(white, grey);
             break;
         end
         
@@ -110,7 +109,7 @@ try
     disp(struct2table(decisionHistory));
 
     % Display instructions for conflict phase indexed as 1
-    ic = ic.displayInstruction(ic, window, white, lang, 1);
+    ic = ic.displayInstruction(white, lang, 1);
 
     % Wait for a spacebar press before continuing
     % Only allow Spacebar key to be detected
@@ -127,9 +126,9 @@ try
         % Check if this was the last trial
         if currentConflictTrials == targetConflictTrials
             % Overwrite the fixation with completion screen
-            ic.displayCompletion(ic, window, white, grey)
+            ic.displayCompletion(white, grey);
             break;
-        end
+        end 
         
         % Increment the counter for the next trial
         currentConflictTrials = currentConflictTrials + 1;
@@ -140,11 +139,24 @@ try
     disp(struct2table(decisionHistory));
 
     % Display reward screen at the end of the experiment
-    ic.displayReward(window, white, grey, score);
+    ic.displayReward(white, grey, score, lang);
+
+    % Conclude the experiment
+    Screen('FillRect', window, grey);
+
+    switch lang
+        case 'en'
+        DrawFormattedText(window, 'Experiment finished. Closing the app...', 'center', 'center', white);
+        case 'de'
+        DrawFormattedText(window, 'Experiment beendet. App schließen...', 'center', 'center', white);
+    end
+
+    Screen('Flip', window);
+    WaitSecs(2);
 
     % Clean up remaining textures
-    tc.cleanUp(tc);
-    Screen('Close');
+    tc.cleanUp();
+
     Screen('CloseAll');
 
 catch error

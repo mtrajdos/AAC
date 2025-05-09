@@ -8,7 +8,9 @@ classdef instructionController
         % PTB window properties
         window;
         xCenter;
+        yCenter;
         height;
+        width;
 
         % Instruction text
         instrStr = [''];
@@ -34,8 +36,8 @@ classdef instructionController
         medalAlpha = {};
     end
     
-    methods
-        function obj = instructionController(bronze, silver, gold, medalsPath, window, xCenter, height)
+    methods (Static)
+        function obj = instructionController(bronze, silver, gold, medalsPath, window, xCenter, yCenter, width, height)
             obj.bronzeThreshold = bronze;
             obj.silverThreshold = silver;
             obj.goldThreshold = gold;
@@ -53,13 +55,15 @@ classdef instructionController
             % Set PTB window properties in the instance
             obj.window = window;
             obj.xCenter = xCenter;
+            obj.yCenter = yCenter;
+            obj.width = width;
             obj.height = height;
 
         end
 
         function obj = displayInstruction(obj, white, lang, instrIndex)
             % Dynamic top padding calculation
-            topPadding = obj.height * 0.3;
+            topPadding = height * 0.3;
             
             % Get instruction text based on language and instruction index
             switch instrIndex
@@ -156,10 +160,10 @@ classdef instructionController
                 % Define medal display parameters
                 medalScale = 0.8;  % Scaling factor for medal size
                 medalSpacing = 200;  % Horizontal spacing between medals
-                medalY = obj.height * 0.72;  % Vertical position for medals
+                medalY = height * 0.72;  % Vertical position for medals
                 
                 % Calculate horizontal positions (centered trio of medals)
-                medalX = [obj.xCenter - medalSpacing, obj.xCenter, obj.xCenter + medalSpacing];
+                medalX = [xCenter - medalSpacing, xCenter, xCenter + medalSpacing];
                 
                 % Load and display each medal
                 for i = 1:3
@@ -207,7 +211,7 @@ classdef instructionController
                         
                         % Draw label under the medal
                         labelY = medalY + scaledHeight/2 + 30;  % Position below medal
-                        DrawFormattedText(obj.window, medalLabels{i}, 'center', labelY, white, [], [], [], [], [], [medalX(i)-medalSpacing/2 0 medalX(i)+medalSpacing/2 obj.height]);
+                        DrawFormattedText(obj.window, medalLabels{i}, 'center', labelY, white, [], [], [], [], [], [medalX(i)-medalSpacing/2 0 medalX(i)+medalSpacing/2 height]);
                         
                     catch error
                         rethrow(error);
@@ -236,21 +240,21 @@ classdef instructionController
                             DrawFormattedText(obj.window, obj.rewardStr, 'center', 'center', white);
                         elseif score >= obj.bronzeThreshold && score < obj.silverThreshold
                             obj.rewardStr = sprintf('Herzlichen Glückwunsch! Sie haben die Bronzemedaille gewonnen! Ihre Punktzahl: %d', score);
-                            DrawFormattedText(obj.window, obj.rewardStr, 'center', obj.height * 0.3, white);
+                            DrawFormattedText(obj.window, obj.rewardStr, 'center', height * 0.3, white);
                             
                             % Display bronze medal
                             displayMedalImage(1);
 
                         elseif score >= obj.silverThreshold && score < obj.goldThreshold
                             obj.rewardStr = sprintf('Herzlichen Glückwunsch! Sie haben die Silbermedaille gewonnen! Ihre Punktzahl: %d', score);
-                            DrawFormattedText(obj.window, obj.rewardStr, 'center', obj.height * 0.3, white);
+                            DrawFormattedText(obj.window, obj.rewardStr, 'center', height * 0.3, white);
                             
                             % Display silver medal
                             displayMedalImage(2);
 
                         else % score >= obj.goldThreshold
                             obj.rewardStr = sprintf('Herzlichen Glückwunsch! Sie haben die Goldmedaille gewonnen! Ihre Punktzahl: %d', score);
-                            DrawFormattedText(obj.window, obj.rewardStr, 'center', obj.height * 0.3, white);
+                            DrawFormattedText(obj.window, obj.rewardStr, 'center', height * 0.3, white);
                             
                             % Display gold medal
                             displayMedalImage(3);
@@ -262,19 +266,19 @@ classdef instructionController
                             DrawFormattedText(obj.window, obj.rewardStr, 'center', 'center', white);
                         elseif score >= obj.bronzeThreshold && score < obj.silverThreshold
                             obj.rewardStr = sprintf('Congratulations! You won the Bronze medal! Your score: %d', score);
-                            DrawFormattedText(obj.window, obj.rewardStr, 'center', obj.height * 0.3, white);
+                            DrawFormattedText(obj.window, obj.rewardStr, 'center', height * 0.3, white);
                             
                             % Display bronze medal
                             displayMedalImage(1);
                         elseif score >= obj.silverThreshold && score < obj.goldThreshold
                             obj.rewardStr = sprintf('Congratulations! You won the Silver medal! Your score: %d', score);
-                            DrawFormattedText(obj.window, obj.rewardStr, 'center', obj.height * 0.3, white);
+                            DrawFormattedText(obj.window, obj.rewardStr, 'center', height * 0.3, white);
                             
                             % Display silver medal
                             displayMedalImage(2);
                         else % score >= obj.goldThreshold
                             obj.rewardStr = sprintf('Congratulations! You won the Gold medal! Your score: %d', score);
-                            DrawFormattedText(obj.window, obj.rewardStr, 'center', obj.height * 0.3, white);
+                            DrawFormattedText(obj.window, obj.rewardStr, 'center', height * 0.3, white);
                             
                             % Display gold medal
                             displayMedalImage(3);
@@ -282,7 +286,7 @@ classdef instructionController
                 end
                 
                 Screen('Flip', obj.window);
-                WaitSecs(7);
+                WaitSecs(3);
                 
                 % Nested function to display medal image
                 function displayMedalImage(medalIndex)
@@ -297,7 +301,7 @@ classdef instructionController
                         scaledHeight = round(imageHeight * medalScale);
                         
                         % Create destination rectangle centered on screen
-                        destRect = CenterRectOnPoint([0, 0, scaledWidth, scaledHeight], obj.xCenter, obj.height * 0.6);
+                        destRect = CenterRectOnPoint([0, 0, scaledWidth, scaledHeight], xCenter, height * 0.6);
                         
                         % Enable alpha blending for transparency
                         Screen('BlendFunction', obj.window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -327,7 +331,7 @@ classdef instructionController
                                 medalTexture = Screen('MakeTexture', obj.window, imageRGBA);
                                 
                                 % Create destination rectangle centered on the medal position
-                                destRect = CenterRectOnPoint([0, 0, scaledWidth, scaledHeight], obj.xCenter, obj.height * 0.6);
+                                destRect = CenterRectOnPoint([0, 0, scaledWidth, scaledHeight], xCenter, height * 0.6);
                                 
                                 % Enable alpha blending for transparency
                                 Screen('BlendFunction', obj.window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -343,6 +347,15 @@ classdef instructionController
                         end
                     end
                 end
+        end
+        
+        function cleanUp(obj)
+            % Clean up all medal textures
+            for i = 1:length(obj.medalTextures)
+                if ~isempty(obj.medalTextures{i})
+                    Screen('Close', obj.medalTextures{i});
+                end
+            end
         end
     end
 end
