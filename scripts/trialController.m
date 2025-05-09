@@ -52,7 +52,7 @@ classdef trialController < handle
         width;
 
         % Set reward info box properties
-        boxWidth = 700;
+        boxWidth = 750;
         boxHeight = 60;
         boxRect;
         
