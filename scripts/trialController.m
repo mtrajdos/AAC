@@ -95,7 +95,7 @@ classdef trialController < handle
             obj.lang = lang;
 
             % Initialize score counter
-            obj.score = int32(130);
+            obj.score = int32(0);
 
             % Set time for participant's decision
             obj.decisionWindow = decisionTime;
@@ -202,6 +202,9 @@ classdef trialController < handle
 
         function [decisionHistory, score] = runTrial(obj, red, grey, white, kc, currentTrialCount, targetTrialCount, decisionHistory, trialType)
 
+            % Draw random slider position
+            obj.slider.currentPosition = randi([1, obj.slider.nSteps]);
+            
             % If conflict phase, randomize a reward (2, 4 or 6 points)
             if strcmp(trialType, 'conflict') 
             obj.pc = obj.pc.drawReward(targetTrialCount);

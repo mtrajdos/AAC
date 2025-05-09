@@ -42,13 +42,13 @@ lang = 'de';
 decisionTime = double(6.00000);
 
 % Starting with baseline trial number 1, test until 18 baseline trials
-currentBaselineTrials = 17;
+currentBaselineTrials = 1;
 targetBaselineTrials = 18;
 
 % Starting with conflict trial number 1, test until 54 conflict trials
 % targetConflictTrials needs to be divisible by 3 due to
 % 3 different reward tiers
-currentConflictTrials = 53;
+currentConflictTrials = 1;
 targetConflictTrials = 54;
 
 % Initialize array for subject decisions
